@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Calor & Verde — Rio Branco</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,sans-serif}
+  #map{position:absolute;inset:0 380px 0 0}
+  #side{position:absolute;top:0;right:0;bottom:0;width:380px;overflow:auto;padding:16px;background:#fafafa;border-left:1px solid #ddd;box-sizing:border-box;font-size:14px}
+  h1{font-size:17px;margin:0 0 6px}
+  h2{font-size:14px;margin:16px 0 6px}
+  .sub{color:#666;font-size:12px;margin-bottom:12px}
+  .kv{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #eee}
+  .kv .k{cursor:help;border-bottom:1px dotted #999}
+  .legend{background:#fff;padding:8px 10px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.2);line-height:1.4;font-size:12px}
+  .legend i{display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:middle}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  td{padding:3px 4px;border-bottom:1px solid #eee}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .toggle{margin:4px 0;display:block}
+  input[type=checkbox],input[type=radio]{vertical-align:middle;margin-right:4px}
+  .ver{background:#eef;border:1px solid #ccd;padding:8px;border-radius:4px;margin-bottom:10px}
+  .ver label{display:block;margin:4px 0}
+  details{margin:8px 0;background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:8px}
+  details summary{cursor:pointer;font-weight:600;font-size:13px}
+  details dl{margin:8px 0 0;font-size:12px;line-height:1.5}
+  details dt{font-weight:600;color:#333;margin-top:6px}
+  details dd{margin:0 0 2px;color:#555}
+  .pill{display:inline-block;padding:1px 6px;border-radius:9px;font-size:10px;background:#eef;color:#447;margin-left:4px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<aside id="side">
+  <h1>Calor &amp; Verde — Rio Branco</h1>
+  <div class="sub">Prioridade de plantio por setor censitário (IBGE 2022). Dados: Landsat/Sentinel-2, estação seca jun–set.</div>
+
+  <div class="ver">
+    <b>Versão do ranking:</b><br>
+    <label><input type="radio" name="ver" value="conservador" checked> Conservador — só setores com ≥50% de pixels válidos de calor</label>
+    <label><input type="radio" name="ver" value="amplo"> Ampla — inclui setores com ≥20% <span class="pill">+37 setores</span></label>
+  </div>
+
+  <div id="resumo">carregando…</div>
+
+  <h2>Camadas</h2>
+  <label class="toggle"><input type="checkbox" id="t-pri" checked> Prioridade de plantio</label>
+  <label class="toggle"><input type="checkbox" id="t-edu" checked> Escolas</label>
+  <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
+  <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
+
+  <h2>Top 10 setores</h2>
+  <table id="top"><thead><tr><td><b>rank</b></td><td><b>setor</b></td><td class="r"><b>índice</b></td><td class="r"><b>LST</b></td></tr></thead><tbody></tbody></table>
+
+  <details>
+    <summary>📖 Glossário</summary>
+    <dl>
+      <dt>LST (Land Surface Temperature)</dt>
+      <dd>Temperatura da superfície medida pelo sensor termal do Landsat 8/9. Mede o quanto o chão (asfalto, telhado, mato, água) irradia calor — <b>não</b> é a mesma coisa que a temperatura do ar. Útil pra comparar áreas entre si.</dd>
+
+      <dt>NDVI (Normalized Difference Vegetation Index)</dt>
+      <dd>Índice de vegetação do Sentinel-2 (−1 a 1). Acima de 0,5 ≈ vegetação densa; perto de 0 ≈ solo nu/asfalto; valores negativos ≈ água.</dd>
+
+      <dt>NDVI Δ (delta)</dt>
+      <dd>NDVI atual (2026) menos NDVI base (2019). Negativo = perdeu verde no período.</dd>
+
+      <dt>Perda (ha e %)</dt>
+      <dd>Área onde pixels verdes em 2019 (NDVI ≥ 0,5) caíram pelo menos 0,2 pontos até 2026. "Perda %" = fração dos pixels classificáveis do setor que entraram nesse critério. Captura corte, queimada ou seca severa — não só desmatamento.</dd>
+
+      <dt>Anomalia de calor</dt>
+      <dd>LST do setor menos LST média da cidade (34,8 °C em 2026). Valor positivo = mais quente que a média urbana.</dd>
+
+      <dt>p75 / p90</dt>
+      <dd>Percentis. "p75 da cidade" = temperatura abaixo da qual estão 75% das áreas; o restante (os 25% mais quentes) é a <b>zona quente</b>. p90 do setor = temperatura típica dos 10% mais quentes dentro dele.</dd>
+
+      <dt>Zona quente</dt>
+      <dd>Pixel ou ponto (escola, posto, parada) onde LST ≥ p75 da cidade. É onde pessoas estão expostas ao calor mais extremo.</dd>
+
+      <dt>Cobertura de calor</dt>
+      <dd>Fração dos pixels de LST do setor que ficaram válidos após máscara de nuvem/sombra do Landsat. Abaixo do limiar (50% ou 20%, conforme a versão) o setor sai do ranking porque a estatística fica frágil demais.</dd>
+
+      <dt>Índice de prioridade (0–100)</dt>
+      <dd><code>0,5 × calor + 0,3 × falta_de_verde + 0,2 × perda</code>, cada termo normalizado min–max entre as unidades. 100 = o pior caso da cidade (mais quente, menos verde, mais perda). Pesos em <code>config.py</code>.</dd>
+
+      <dt>Rank</dt>
+      <dd>Posição no ranking de prioridade; 1 = plantar primeiro.</dd>
+
+      <dt>Setor censitário</dt>
+      <dd>Menor unidade do IBGE para o Censo — polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). O IBGE não oficializou divisão por bairros, por isso o ranking é por setor.</dd>
+
+      <dt>Estação seca</dt>
+      <dd>Jun–set na Amazônia. Mais cenas aproveitáveis dos satélites (menos nuvem) e também o período de pico de calor.</dd>
+
+      <dt>POI</dt>
+      <dd>Point of Interest — escolas, unidades de saúde, pontos de ônibus. Fonte: OpenStreetMap (atual).</dd>
+
+      <dt>Conservador vs Ampla</dt>
+      <dd>Versões do ranking com limiares de cobertura diferentes. <b>Conservador (50%)</b>: estatísticas mais robustas, melhor pra decisão pública. <b>Ampla (20%)</b>: cobre mais setores no mapa, mais ruidoso nas bordas.</dd>
+    </dl>
+  </details>
+</aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map').setView([-9.97, -67.81], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {attribution:'© OpenStreetMap', maxZoom:19}).addTo(map);
+
+const PALETTE = ['#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026'];
+function color(v){
+  if(v==null) return '#ccc';
+  const b = [10,25,40,55,70,85];
+  for(let i=0;i<b.length;i++) if(v<b[i]) return PALETTE[i];
+  return PALETTE[6];
+}
+
+let pri, edu, sau, bus, legend;
+let currentVer = 'conservador';
+
+const TOOLTIPS = {
+  'LST média cidade': 'Temperatura média da superfície (Landsat) na mancha urbana durante a estação seca',
+  'LST p75 cidade': 'Limiar da zona quente: 25% das áreas da cidade estão acima disso',
+  'Perda total': 'Hectares que eram verdes em 2019 e deixaram de ser em 2026',
+  'Escolas em zona quente': 'Escolas localizadas em pixels de LST ≥ p75 da cidade',
+  'Saúde em zona quente': 'Unidades de saúde em zona quente',
+  'Ônibus em zona quente': 'Pontos de ônibus em zona quente',
+  'Ano atual': 'Ano das camadas de LST, NDVI atual e perda',
+  'Ano base': 'Ano do NDVI base, usado para calcular a perda de vegetação',
+  'Setores no ranking': 'Setores censitários com cobertura de pixels válidos suficiente para entrar no índice'
+};
+
+function pop(f){
+  const p = f.properties;
+  const safe = (v, d=1) => v==null ? '—' : v.toFixed(d);
+  return `<b>Setor ${p.nome}</b><br>
+    <b>Prioridade: ${safe(p.indice_prioridade)}</b> (rank ${p.rank ?? '—'})<br>
+    <b>LST</b>: média ${safe(p.lst_mean)} °C · p90 ${safe(p.lst_percentile_90)} °C<br>
+    <b>Anomalia</b>: ${p.anomalia_calor>0?'+':''}${safe(p.anomalia_calor)} °C vs. cidade<br>
+    <b>NDVI atual</b>: ${safe(p.ndvi_atual_mean,2)} (Δ ${safe(p.ndvi_delta,2)} vs. 2019)<br>
+    <b>Perda</b>: ${safe(p.perda_ha,2)} ha (${safe(p.perda_pct,0)}%)<br>
+    <b>Cobertura calor</b>: ${((p.cobertura_calor||0)*100).toFixed(0)}%`;
+}
+
+function clearPri(){
+  if(pri){ map.removeLayer(pri); pri = null; }
+  if(legend){ map.removeControl(legend); legend = null; }
+  document.querySelector('#top tbody').innerHTML = '';
+}
+
+function loadPri(ver){
+  clearPri();
+  const file = `unidades_prioridade_${ver}.geojson`;
+  fetch(file).then(r=>r.json()).then(gj=>{
+    pri = L.geoJSON(gj, {
+      style: f => ({
+        fillColor: color(f.properties.indice_prioridade),
+        color: '#333', weight: 0.4, fillOpacity: 0.75
+      }),
+      onEachFeature: (f,l)=>l.bindPopup(pop(f))
+    });
+    if(document.getElementById('t-pri').checked) pri.addTo(map);
+    if(ver === currentVer) map.fitBounds(pri.getBounds());
+    const feats = gj.features.filter(f=>f.properties.rank!=null)
+      .sort((a,b)=>a.properties.rank-b.properties.rank).slice(0,10);
+    const tb = document.querySelector('#top tbody');
+    feats.forEach(f=>{
+      const p = f.properties;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${p.rank}</td><td>${p.nome}</td>
+        <td class="r">${p.indice_prioridade.toFixed(1)}</td>
+        <td class="r">${p.lst_mean.toFixed(1)}°</td>`;
+      tr.style.cursor='pointer';
+      tr.onclick = ()=>{ const b=L.geoJSON(f).getBounds(); map.fitBounds(b.pad(0.5)); };
+      tb.appendChild(tr);
+    });
+    legend = L.control({position:'bottomright'});
+    legend.onAdd = () => {
+      const d = L.DomUtil.create('div','legend');
+      d.innerHTML = '<b>Prioridade</b><br>' +
+        [[0,'<10 — baixa'],[10,'10–25'],[25,'25–40'],[40,'40–55'],[55,'55–70'],[70,'70–85'],[85,'≥85 — crítica']]
+        .map(([v,l])=>`<i style="background:${color(v+1)}"></i>${l}`).join('<br>') +
+        '<br><i style="background:#ccc"></i>sem dado';
+      return d;
+    };
+    legend.addTo(map);
+  });
+}
+
+function loadResumo(ver){
+  fetch(`resumo_${ver}.json`).then(r=>r.json()).then(s=>{
+    const kv = (k,v)=>{
+      const tip = TOOLTIPS[k] ? `title="${TOOLTIPS[k]}"` : '';
+      return `<div class="kv"><span class="k" ${tip}>${k}</span><b>${v}</b></div>`;
+    };
+    const nSet = s.setores_no_ranking ?? '—';
+    document.getElementById('resumo').innerHTML =
+      '<h2 style="margin-top:0">Resumo da cidade</h2>' +
+      kv('Ano atual', s.ano_atual) +
+      kv('Ano base', s.ano_base) +
+      kv('LST média cidade', s.lst_media_cidade+' °C') +
+      kv('LST p75 cidade', s.lst_p75_cidade+' °C') +
+      kv('Perda total', s.perda_total_ha+' ha') +
+      kv('Escolas em zona quente', `${s.pois_em_zona_quente?.educacao ?? 0} / ${s.pois_total?.educacao ?? 0}`) +
+      kv('Saúde em zona quente', `${s.pois_em_zona_quente?.saude ?? 0} / ${s.pois_total?.saude ?? 0}`) +
+      kv('Ônibus em zona quente', `${s.pois_em_zona_quente?.ponto_onibus ?? 0} / ${s.pois_total?.ponto_onibus ?? 0}`);
+  });
+}
+
+// POIs (iguais nas duas versões)
+fetch('pois_calor.geojson').then(r=>r.json()).then(gj=>{
+  const mk = (color) => (lat,lng)=>L.circleMarker([lat,lng],{radius:4,color:'#111',weight:0.6,fillColor:color,fillOpacity:0.85});
+  const COL = {educacao:'#1f77b4', saude:'#d62728', ponto_onibus:'#7f7f7f'};
+  const byCat = {educacao:[],saude:[],ponto_onibus:[]};
+  gj.features.forEach(f=>{
+    if(!f.geometry) return;
+    const [lng,lat] = f.geometry.coordinates;
+    const cat = f.properties.categoria;
+    const m = mk(COL[cat])(lat,lng).bindPopup(
+      `<b>${f.properties.nome||'(sem nome)'}</b><br>${cat}<br>LST: ${f.properties.lst?.toFixed(1) ?? '—'} °C${f.properties.zona_quente?' · <b>zona quente</b>':''}`);
+    byCat[cat].push(m);
+  });
+  edu = L.layerGroup(byCat.educacao).addTo(map);
+  sau = L.layerGroup(byCat.saude).addTo(map);
+  bus = L.layerGroup(byCat.ponto_onibus);
+});
+
+const bind = (id, getLayer) => {
+  document.getElementById(id).onchange = e => {
+    const l = getLayer(); if(!l) return;
+    e.target.checked ? l.addTo(map) : map.removeLayer(l);
+  };
+};
+bind('t-pri', ()=>pri); bind('t-edu', ()=>edu);
+bind('t-sau', ()=>sau); bind('t-bus', ()=>bus);
+
+// radio versão
+document.querySelectorAll('input[name=ver]').forEach(r=>{
+  r.onchange = e => {
+    currentVer = e.target.value;
+    loadPri(currentVer);
+    loadResumo(currentVer);
+  };
+});
+
+loadPri(currentVer);
+loadResumo(currentVer);
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# baixado do IBGE (regenerável); mantemos só o filtro de Rio Branco
+data/AC_setores_CD2022.gpkg
+
+# logs locais
+*.log
+.cv-http.log
