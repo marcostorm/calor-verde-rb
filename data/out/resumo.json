@@ -30,5 +30,15 @@
       "indice_prioridade": 89.04,
       "lst_mean": 43.76
     }
-  ]
+  ],
+  "pois_em_zona_quente": {
+    "educacao": 142,
+    "ponto_onibus": 55,
+    "saude": 30
+  },
+  "pois_total": {
+    "educacao": 214,
+    "ponto_onibus": 57,
+    "saude": 41
+  }
 }
