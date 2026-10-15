@@ -201,7 +201,7 @@ def main():
     }
 
     if not args.sem_pois:
-        bbox = gdf.to_crs("EPSG:4326").total_bounds
+        bbox = tuple(C.AOI_BBOX)
         pois = fetch_pois(bbox)
         pois["lst"] = sample_raster(pois, lst_tif)
         pois["zona_quente"] = pois["lst"] >= lst_p75
