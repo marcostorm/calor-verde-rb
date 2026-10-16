@@ -27,12 +27,13 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
    - Top-5 do run atual sobrepõe o do último snapshot em ≥ 3 setores → senão investigar
    - Arquivos de saída existem, geojson tem o nº esperado de features, resumo.json tem todos os campos
 
-1.2 **Script `compare_runs.py`** que lê dois `resumo.json` e dois `ranking.csv` e imprime diff estruturado:
+✅ 1.2 **Script `compare_runs.py`** (feito em 2026-10-15). Lê dois diretórios de output e imprime diff estruturado:
    - top-5 que entrou/saiu
    - maior salto de índice (positivo e negativo) com nome do setor
    - variação de `lst_media_cidade`, `lst_p75_cidade`, `perda_total_ha`
    - % de setores que mudaram de bin de cor
    - contagem de interpolados que viraram originais (ou vice-versa)
+   - Filtra ruído: só reporta saltos com |Δ| ≥ 0,5
 
 1.3 **Pin de versões** em `requirements.txt`:
    - Trocar `geopandas>=0.14` por versões fixas (`==`) das 5 libs principais

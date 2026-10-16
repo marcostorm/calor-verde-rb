@@ -92,6 +92,25 @@ Depois abra `http://localhost:8787/viewer.html` no navegador. Para parar o serve
 
 O visualizador carrega sozinho os três resumos, as duas versões do choropleth e os POIs. Switch de versão (rádio no topo do painel direito) recarrega sem precisar reload da página.
 
+## Comparar duas rodadas (`scripts/compare_runs.py`)
+
+Diff estruturado entre dois diretórios de output.
+
+```bash
+python scripts/compare_runs.py <dir_antigo> <dir_novo>
+# ex. comparar snapshot do mês passado com a rodada de hoje:
+python scripts/compare_runs.py snapshots/2026-09 data/out
+```
+
+Imprime:
+- Deltas em `lst_media_cidade`, `lst_p75_cidade`, `perda_total_ha` (valor absoluto e %)
+- Top-5 que entrou/saiu/permaneceu
+- 10 maiores saltos de índice pra cima e 10 pra baixo (filtra |Δ| ≥ 0,5)
+- Quantos setores mudaram de bin de cor e as transições mais comuns
+- Interpolação: quantos viraram ou deixaram de ser interpolados
+
+Útil pra validar impacto de uma mudança de parâmetro (ex. buffer, min-cobertura) antes de aceitar o novo snapshot como oficial.
+
 ## Validação pós-pipeline (QA)
 
 Ao fim de `analyze.py` roda um bloco `=== QA ===` com checks de sanidade:
