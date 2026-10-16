@@ -92,6 +92,25 @@ Depois abra `http://localhost:8787/viewer.html` no navegador. Para parar o serve
 
 O visualizador carrega sozinho os três resumos, as duas versões do choropleth e os POIs. Switch de versão (rádio no topo do painel direito) recarrega sem precisar reload da página.
 
+## Validação pós-pipeline (QA)
+
+Ao fim de `analyze.py` roda um bloco `=== QA ===` com checks de sanidade:
+
+**HARD (sai com exit 2 se falhar):**
+- Pelo menos 50% dos setores têm rank
+- `lst_media_cidade` entre 20 e 50 °C
+- `lst_p75` ≥ `lst_media`
+- Top-5 tem 5 entradas e nenhum campo nulo
+- Arquivos de saída existem e não estão vazios
+
+**SOFT (só alerta, continua):**
+- Cobertura do mapa ≥ 85%
+- `lst_media_cidade` na faixa típica 30–40 °C
+- `perda_total_ha` entre 100 e 10.000 ha
+- Interpolados ≤ 6× cinzas remanescentes
+
+Se um HARD falhar, scripts que encadeiam o pipeline (ex. `scripts/pipeline-full.sh` planejado) devem parar e investigar. Rodar `storm-rag` ou publicar outputs com HARD-fail é bug no script chamador, não no analyze.
+
 ## Troubleshooting
 
 ### `pip install -r requirements.txt` falha com "externally-managed-environment"

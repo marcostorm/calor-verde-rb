@@ -3,7 +3,7 @@
   "ano_base": 2019,
   "lst_media_cidade": 34.83,
   "lst_p75_cidade": 36.51,
-  "perda_total_ha": 29229.4,
+  "perda_total_ha": 2037.7,
   "top5_prioridade": [
     {
       "nome": "120040105000314",
@@ -12,33 +12,23 @@
     },
     {
       "nome": "120040105000098",
-      "indice_prioridade": 94.77,
+      "indice_prioridade": 94.72,
       "lst_mean": 45.41
     },
     {
-      "nome": "120040105000062",
-      "indice_prioridade": 89.69,
-      "lst_mean": 44.38
-    },
-    {
       "nome": "120040105000655",
-      "indice_prioridade": 89.17,
+      "indice_prioridade": 89.02,
       "lst_mean": 44.54
     },
     {
       "nome": "120040105000061",
-      "indice_prioridade": 89.04,
+      "indice_prioridade": 88.8,
       "lst_mean": 43.76
+    },
+    {
+      "nome": "120040105000138",
+      "indice_prioridade": 87.05,
+      "lst_mean": 43.15
     }
-  ],
-  "pois_em_zona_quente": {
-    "educacao": 142,
-    "ponto_onibus": 55,
-    "saude": 30
-  },
-  "pois_total": {
-    "educacao": 214,
-    "ponto_onibus": 57,
-    "saude": 41
-  }
+  ]
 }

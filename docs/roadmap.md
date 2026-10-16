@@ -19,7 +19,7 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 
 **Entregáveis:**
 
-1.1 **Validação pós-pipeline** no final do `analyze.py`. Bloco de assertions soft (alerta, não falha) e hard (falha com exit 2). Lista mínima:
+✅ 1.1 **Validação pós-pipeline** no final do `analyze.py` (feito em 2026-10-15, commit 1afa72c). Bloco de assertions soft (alerta, não falha) e hard (falha com exit 2). Imediatamente detectou e levou a corrigir um bug real na interpolação de `perda_ha` (valores inflados por 10x+). Lista mínima:
    - `com_rank / total ≥ 0,85` → senão alerta
    - `len(cinzas rurais) / len(cinzas) ≥ 0,7` → senão algo mudou no AOI
    - `25 ≤ lst_media_cidade ≤ 45` → senão unidade/raster errado

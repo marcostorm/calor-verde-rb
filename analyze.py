@@ -16,6 +16,7 @@ import argparse
 import glob
 import json
 import os
+import sys
 
 import geopandas as gpd
 import numpy as np
@@ -151,8 +152,12 @@ def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px
 
     cob = (lst_buf["lst_count"].values * lst_px / buf_area).clip(0, 1)
     perda_pct_buf = 100 * perda_buf["perda_sum"].values / perda_buf["perda_count"].replace(0, np.nan).values
-    perda_ha_buf = perda_buf["perda_sum"].fillna(0).values * px_area / 1e4
     ndvi_delta_buf = ndvi_buf["ndvi_atual_mean"].values - base_buf["ndvi_base_mean"].values
+
+    # Nota: perda_ha (hectares absolutos) NÃO é interpolado porque multiplicar
+    # perda_pct do buffer pela área do setor cria valores enganosos em setores
+    # grandes (rurais), inflando perda_total_ha da cidade. perda_pct é
+    # defensável (percentual), perda_ha fica como estava no zonal original.
 
     thresh = min_cobertura / 5
     counts = lst_buf["lst_count"].values
@@ -167,7 +172,6 @@ def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px
             g.at[row, "ndvi_delta"] = float(ndvi_delta_buf[i])
         if not np.isnan(perda_pct_buf[i]):
             g.at[row, "perda_pct"] = float(perda_pct_buf[i])
-        g.at[row, "perda_ha"] = float(perda_ha_buf[i])
         g.at[row, "interpolado"] = True
     return g
 
@@ -288,6 +292,76 @@ def main():
     with open(os.path.join(C.OUT_DIR, "resumo.json"), "w") as f:
         json.dump(resumo, f, ensure_ascii=False, indent=2, default=int)
     print(json.dumps(resumo, ensure_ascii=False, indent=2, default=int))
+
+    validate_outputs(gdf, resumo, C.OUT_DIR, args.sem_pois)
+
+
+def validate_outputs(gdf, resumo, out_dir, sem_pois):
+    """Checks de sanidade pós-pipeline. Fail-hard em HARD, só WARN em SOFT."""
+    hard_fails, soft_warns = [], []
+
+    def hard(cond, msg):
+        if not cond:
+            hard_fails.append(msg)
+
+    def soft(cond, msg):
+        if not cond:
+            soft_warns.append(msg)
+
+    total = len(gdf)
+    com_rank = int(gdf["rank"].notna().sum())
+    cinzas = total - com_rank
+    interp = int(gdf["interpolado"].fillna(False).sum()) if "interpolado" in gdf.columns else 0
+    lst_media = resumo.get("lst_media_cidade")
+    lst_p75 = resumo.get("lst_p75_cidade")
+    perda = resumo.get("perda_total_ha")
+    top5 = resumo.get("top5_prioridade", [])
+
+    hard(total > 0, "zero unidades no gdf de saída")
+    hard(com_rank / max(total, 1) >= 0.50,
+         f"menos de 50% dos setores têm rank ({com_rank}/{total})")
+    hard(lst_media is not None and 20 <= lst_media <= 50,
+         f"lst_media_cidade fora da faixa 20-50°C: {lst_media}")
+    hard(lst_p75 is not None and lst_p75 >= lst_media,
+         f"lst_p75 ({lst_p75}) deveria ser >= lst_media ({lst_media})")
+    hard(len(top5) == 5, f"top5 tem {len(top5)} entradas, esperado 5")
+    hard(all(t.get("indice_prioridade") is not None and
+             t.get("lst_mean") is not None for t in top5),
+         "top5 tem campos nulos")
+
+    for f in ["ranking.csv", "unidades_prioridade.geojson", "resumo.json"]:
+        p = os.path.join(out_dir, f)
+        hard(os.path.exists(p) and os.path.getsize(p) > 0,
+             f"arquivo de saída ausente ou vazio: {f}")
+    if not sem_pois:
+        p = os.path.join(out_dir, "pois_calor.geojson")
+        hard(os.path.exists(p) and os.path.getsize(p) > 0,
+             "pois_calor.geojson ausente ou vazio")
+
+    soft(com_rank / max(total, 1) >= 0.85,
+         f"cobertura do mapa abaixo de 85% (atual {100*com_rank/total:.1f}%)")
+    soft(lst_media is None or 30 <= lst_media <= 40,
+         f"lst_media_cidade fora da faixa típica 30-40°C: {lst_media}")
+    soft(perda is None or 100 <= perda <= 10000,
+         f"perda_total_ha fora da faixa típica 100-10000: {perda}")
+    soft(interp <= 6 * max(cinzas, 1),
+         f"muitos interpolados vs. cinzas ({interp} interpolados para {cinzas} cinzas)")
+
+    print("\n=== QA ===")
+    print(f"total={total}  com_rank={com_rank} ({100*com_rank/total:.1f}%)  "
+          f"cinzas={cinzas}  interpolados={interp}")
+    print(f"lst_media={lst_media}°C  lst_p75={lst_p75}°C  perda_total={perda}ha")
+    if soft_warns:
+        print("⚠ SOFT:")
+        for w in soft_warns:
+            print(f"  - {w}")
+    if hard_fails:
+        print("✗ HARD:")
+        for f in hard_fails:
+            print(f"  - {f}")
+        sys.exit(2)
+    if not soft_warns:
+        print("✓ todos os checks passaram")
 
 
 if __name__ == "__main__":
