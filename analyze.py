@@ -184,7 +184,7 @@ def main():
     ap.add_argument("--sem-pois", action="store_true")
     ap.add_argument("--sem-interpolar", action="store_true",
                     help="desativa interpolação por buffer dos setores sem cobertura LST")
-    ap.add_argument("--buffer-interp", type=float, default=2500,
+    ap.add_argument("--buffer-interp", type=float, default=3500,
                     help="raio (m) do buffer usado pra amostrar pixels dos setores cinzas")
     ap.add_argument("--min-pixels-interp", type=int, default=50,
                     help="mínimo de pixels LST válidos no buffer para aceitar a interpolação")
