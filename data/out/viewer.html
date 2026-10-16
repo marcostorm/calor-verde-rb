@@ -30,9 +30,9 @@
   h1{font-family:var(--serif);font-size:26px;font-weight:700;font-variation-settings:"opsz" 48;letter-spacing:-.01em;margin:0 0 2px;line-height:1.1}
   h2{font-family:var(--serif);font-size:15px;font-weight:600;font-variation-settings:"opsz" 14;margin:20px 0 8px;letter-spacing:.01em;color:var(--text)}
   .sub{color:var(--text-muted);font-size:12.5px;margin-bottom:16px;line-height:1.5}
-  .kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--border-soft);font-size:13px}
-  .kv .k{cursor:help;border-bottom:1px dotted var(--text-faint);color:var(--text-muted)}
-  .kv b{font-variant-numeric:tabular-nums;font-weight:600;color:var(--text)}
+  .kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px dashed var(--border-soft);font-size:13px}
+  .kv .k{cursor:help;border-bottom:1px dotted var(--text-faint);color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kv b{font-variant-numeric:tabular-nums;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0}
   .legend{background:#fff;padding:10px 12px;border:1px solid var(--border-soft);border-radius:3px;box-shadow:0 2px 8px rgba(42,36,32,.08);line-height:1.5;font-size:12px;font-family:var(--sans)}
   .legend b{font-family:var(--serif);font-weight:600;font-size:13px;display:block;margin-bottom:4px;color:var(--text)}
   .legend i{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:middle;border:1px solid rgba(0,0,0,.1)}
@@ -61,6 +61,10 @@
   .export a.link{color:var(--accent);font-size:12px;text-decoration:none;border-bottom:1px solid var(--border-strong);padding-bottom:1px}
   .export a.link:hover{color:var(--text);border-color:var(--accent)}
   .print-header{display:none}
+  body.exporting .ver, body.exporting .toggle, body.exporting .export,
+  body.exporting #camadas-controls, body.exporting #camadas-title { display:none !important }
+  body.exporting .print-header { display:block; border-bottom:1px solid var(--border-strong); padding-bottom:8px; margin-bottom:12px }
+  body.exporting .pill { display:none }
   @media (max-width: 768px) {
     html, body { height: auto; }
     #map { position: static; width: 100%; height: 55vh; }
@@ -92,7 +96,7 @@
 
   <div class="print-header">
     <h1 style="margin:0 0 2px">Calor &amp; Verde — Rio Branco</h1>
-    <small>Prioridade de plantio por setor censitário · <span id="print-date"></span></small>
+    <small>Prioridade de plantio por setor censitário · versão <span id="print-ver">conservador</span> · <span id="print-date"></span></small>
   </div>
 
   <div class="export">
@@ -482,6 +486,10 @@ document.getElementById('btn-png').onclick = async () => {
         document.head.appendChild(s);
       });
     }
+    document.getElementById('print-ver').textContent = currentVer;
+    document.body.classList.add('exporting');
+    // Yield pro layout aplicar `.exporting` antes do snapshot
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     const url = await window.modernScreenshot.domToPng(document.getElementById('side'), {
       scale: 2, backgroundColor: '#fdf6ec',
     });
@@ -493,6 +501,7 @@ document.getElementById('btn-png').onclick = async () => {
   } catch (e) {
     alert('Erro gerando PNG: ' + e.message + '\nTente "Baixar PDF" ou use o screenshot do sistema.');
   } finally {
+    document.body.classList.remove('exporting');
     btn.textContent = orig; btn.disabled = false;
   }
 };
