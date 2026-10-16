@@ -118,6 +118,55 @@ def sample_raster(points, raster):
     return vals
 
 
+def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px, px_area):
+    """Preenche setores sem cobertura amostrando pixels dentro de um buffer da geometria.
+
+    Para cada setor com ok=False, calcula zonal stats numa versão da geometria
+    expandida por buffer_m metros. O critério de cobertura dentro do buffer é
+    metade do min_cobertura original — já que o buffer é usado justamente onde
+    o setor em si não tem pixels bons, exigir o mesmo rigor eliminaria quase
+    tudo. Setores isolados (sem pixels válidos nem no buffer) ficam cinzas.
+
+    gdf: GeoDataFrame em CRS métrico (buffer é em metros).
+    rasters: dict com paths de lst, ndvi_now, ndvi_base, loss.
+    """
+    g = gdf.copy()
+    g["interpolado"] = False
+    needy_pos = np.where(~np.asarray(ok_mask))[0]
+    if len(needy_pos) == 0:
+        return g
+
+    needy = g.iloc[needy_pos].copy()
+    needy["geometry"] = needy.geometry.buffer(buffer_m)
+    buf_area = needy.geometry.area.values
+
+    lst_buf = zonal(needy, rasters["lst"], ["mean", "percentile_90", "count"], "lst_")
+    ndvi_buf = zonal(needy, rasters["ndvi_now"], ["mean"], "ndvi_atual_")
+    base_buf = zonal(needy, rasters["ndvi_base"], ["mean"], "ndvi_base_")
+    perda_buf = zonal(needy, rasters["loss"], ["sum", "count"], "perda_")
+
+    cob = (lst_buf["lst_count"].values * lst_px / buf_area).clip(0, 1)
+    perda_pct_buf = 100 * perda_buf["perda_sum"].values / perda_buf["perda_count"].replace(0, np.nan).values
+    perda_ha_buf = perda_buf["perda_sum"].fillna(0).values * px_area / 1e4
+    ndvi_delta_buf = ndvi_buf["ndvi_atual_mean"].values - base_buf["ndvi_base_mean"].values
+
+    thresh = min_cobertura / 2
+    for i, pos in enumerate(needy_pos):
+        if cob[i] < thresh or np.isnan(lst_buf["lst_mean"].iat[i]):
+            continue
+        row = g.index[pos]
+        g.at[row, "lst_mean"] = float(lst_buf["lst_mean"].iat[i])
+        g.at[row, "lst_percentile_90"] = float(lst_buf["lst_percentile_90"].iat[i])
+        g.at[row, "ndvi_atual_mean"] = float(ndvi_buf["ndvi_atual_mean"].iat[i])
+        if not np.isnan(ndvi_delta_buf[i]):
+            g.at[row, "ndvi_delta"] = float(ndvi_delta_buf[i])
+        if not np.isnan(perda_pct_buf[i]):
+            g.at[row, "perda_pct"] = float(perda_pct_buf[i])
+        g.at[row, "perda_ha"] = float(perda_ha_buf[i])
+        g.at[row, "interpolado"] = True
+    return g
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--unidades", required=True)
@@ -128,6 +177,10 @@ def main():
     ap.add_argument("--min-cobertura", type=float, default=0.5,
                     help="fração mínima de pixels válidos de calor para a unidade entrar no ranking")
     ap.add_argument("--sem-pois", action="store_true")
+    ap.add_argument("--sem-interpolar", action="store_true",
+                    help="desativa interpolação por buffer dos setores sem cobertura LST")
+    ap.add_argument("--buffer-interp", type=float, default=500,
+                    help="raio (m) do buffer usado pra amostrar pixels dos setores cinzas")
     args = ap.parse_args()
     os.makedirs(C.OUT_DIR, exist_ok=True)
 
@@ -168,6 +221,18 @@ def main():
                         left_on="nome", right_on=args.chave)
 
     ok = gdf["cobertura_calor"] >= args.min_cobertura
+    gdf["interpolado"] = False
+    if not args.sem_interpolar:
+        rasters = {"lst": lst_tif, "ndvi_now": ndvi_now_tif,
+                   "ndvi_base": ndvi_base_tif, "loss": loss_tif}
+        gdf = interpolate_by_buffer(gdf, ok, rasters,
+                                    buffer_m=args.buffer_interp,
+                                    min_cobertura=args.min_cobertura,
+                                    lst_px=lst_px, px_area=px_area)
+        gdf["anomalia_calor"] = gdf["lst_mean"] - lst_mean
+        n_interp = int(gdf["interpolado"].sum())
+        print(f"interpoladas: {n_interp} unidades (buffer {args.buffer_interp:.0f} m)")
+        ok = ok | gdf["interpolado"]
     g = gdf[ok].copy()
     falta_verde = 1 - minmax(g["ndvi_atual_mean"])
     if args.arborizacao and g[args.col_arbor].notna().any():
@@ -184,7 +249,8 @@ def main():
     gdf["rank"] = gdf["rank"].astype("Int64")
 
     cols = ["rank", "nome", "indice_prioridade", "lst_mean", "lst_percentile_90", "anomalia_calor",
-            "ndvi_atual_mean", "ndvi_delta", "perda_ha", "perda_pct", "area_ha", "cobertura_calor"]
+            "ndvi_atual_mean", "ndvi_delta", "perda_ha", "perda_pct", "area_ha", "cobertura_calor",
+            "interpolado"]
     if args.arborizacao:
         cols.append(args.col_arbor)
     gdf = gdf.sort_values("rank", na_position="last")

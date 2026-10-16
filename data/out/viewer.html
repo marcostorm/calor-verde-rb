@@ -98,6 +98,9 @@
 
       <dt>Conservador vs Ampla</dt>
       <dd>Versões do ranking com limiares de cobertura diferentes. <b>Conservador (50%)</b>: estatísticas mais robustas, melhor pra decisão pública. <b>Ampla (20%)</b>: cobre mais setores no mapa, mais ruidoso nas bordas.</dd>
+
+      <dt>Setor interpolado</dt>
+      <dd>Setor que não tinha cobertura LST própria suficiente, mas cujas métricas foram estimadas amostrando os pixels de um buffer de 500 m ao redor da geometria. No mapa aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro.</dd>
     </dl>
   </details>
 </aside>
@@ -134,7 +137,8 @@ const TOOLTIPS = {
 function pop(f){
   const p = f.properties;
   const safe = (v, d=1) => v==null ? '—' : v.toFixed(d);
-  return `<b>Setor ${p.nome}</b><br>
+  const tag = p.interpolado ? ' <span style="color:#b8860b">(interpolado por buffer)</span>' : '';
+  return `<b>Setor ${p.nome}</b>${tag}<br>
     <b>Prioridade: ${safe(p.indice_prioridade)}</b> (rank ${p.rank ?? '—'})<br>
     <b>LST</b>: média ${safe(p.lst_mean)} °C · p90 ${safe(p.lst_percentile_90)} °C<br>
     <b>Anomalia</b>: ${p.anomalia_calor>0?'+':''}${safe(p.anomalia_calor)} °C vs. cidade<br>
@@ -154,7 +158,10 @@ function loadPri(ver){
   const file = `unidades_prioridade_${ver}.geojson`;
   fetch(file).then(r=>r.json()).then(gj=>{
     pri = L.geoJSON(gj, {
-      style: f => ({
+      style: f => f.properties.interpolado ? ({
+        fillColor: color(f.properties.indice_prioridade),
+        color: '#b8860b', weight: 1.0, fillOpacity: 0.5, dashArray: '3,3'
+      }) : ({
         fillColor: color(f.properties.indice_prioridade),
         color: '#333', weight: 0.4, fillOpacity: 0.75
       }),
