@@ -55,7 +55,7 @@
   <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
   <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
 
-  <h2>Top 10 setores</h2>
+  <h2 id="top-title">Top 10 setores</h2>
   <table id="top"><thead><tr><td><b>rank</b></td><td><b>setor</b></td><td class="r"><b>índice</b></td><td class="r"><b>LST</b></td></tr></thead><tbody></tbody></table>
 
   <details>
@@ -194,8 +194,13 @@ function loadPri(ver){
     });
     if(document.getElementById('t-pri').checked) pri.addTo(map);
     if(ver === currentVer) map.fitBounds(pri.getBounds());
+    const sorter = currentModo === 'lst'
+      ? (a,b) => (b.properties.lst_mean ?? -Infinity) - (a.properties.lst_mean ?? -Infinity)
+      : (a,b) => a.properties.rank - b.properties.rank;
     const feats = gj.features.filter(f=>f.properties.rank!=null)
-      .sort((a,b)=>a.properties.rank-b.properties.rank).slice(0,10);
+      .sort(sorter).slice(0,10);
+    document.getElementById('top-title').textContent =
+      currentModo === 'lst' ? 'Top 10 mais quentes' : 'Top 10 prioritários';
     const tb = document.querySelector('#top tbody');
     feats.forEach(f=>{
       const p = f.properties;
