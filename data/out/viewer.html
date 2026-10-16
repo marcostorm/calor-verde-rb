@@ -25,6 +25,7 @@
   }
   html,body{margin:0;height:100%;font-family:var(--sans);color:var(--text);background:var(--bg-page)}
   #map{position:absolute;inset:0 380px 0 0;background:#efe8da}
+  .leaflet-tile-pane{filter:grayscale(.65) brightness(1.08) contrast(.92)}
   #side{position:absolute;top:0;right:0;bottom:0;width:380px;overflow:auto;padding:20px 18px;background:var(--bg-page);border-left:1px solid var(--border-soft);box-sizing:border-box;font-size:14px;line-height:1.45}
   h1{font-family:var(--serif);font-size:26px;font-weight:700;font-variation-settings:"opsz" 48;letter-spacing:-.01em;margin:0 0 2px;line-height:1.1}
   h2{font-family:var(--serif);font-size:15px;font-weight:600;font-variation-settings:"opsz" 14;margin:20px 0 8px;letter-spacing:.01em;color:var(--text)}
@@ -170,8 +171,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const map = L.map('map').setView([-9.97, -67.81], 12);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  {attribution:'© OpenStreetMap, © CARTO', subdomains:'abcd', maxZoom:19}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {attribution:'© OpenStreetMap', maxZoom:19}).addTo(map);
 
 // Reajusta tiles quando o layout muda (rotação de celular, redimensionamento).
 window.addEventListener('resize', () => map.invalidateSize());
