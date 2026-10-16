@@ -7,28 +7,33 @@
   "top5_prioridade": [
     {
       "nome": "120040105000314",
+      "bairro": "Vila da Amizade",
       "indice_prioridade": 96.57,
       "lst_mean": 45.84
     },
     {
       "nome": "120040105000098",
-      "indice_prioridade": 94.72,
+      "bairro": "João Eduardo I",
+      "indice_prioridade": 94.77,
       "lst_mean": 45.41
     },
     {
+      "nome": "120040105000062",
+      "bairro": "Aeroporto Velho",
+      "indice_prioridade": 89.69,
+      "lst_mean": 44.38
+    },
+    {
       "nome": "120040105000655",
-      "indice_prioridade": 89.02,
+      "bairro": "João Eduardo I",
+      "indice_prioridade": 89.17,
       "lst_mean": 44.54
     },
     {
       "nome": "120040105000061",
-      "indice_prioridade": 88.8,
+      "bairro": "Aeroporto Velho",
+      "indice_prioridade": 89.04,
       "lst_mean": 43.76
-    },
-    {
-      "nome": "120040105000138",
-      "indice_prioridade": 87.05,
-      "lst_mean": 43.15
     }
   ]
 }

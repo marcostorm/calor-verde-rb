@@ -176,6 +176,48 @@ def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px
     return g
 
 
+def join_bairro_osm(gdf, bairros_path, max_m=3000, epsg_metrico=31979):
+    """Atribui `bairro` a cada unidade pelo ponto OSM mais próximo (nearest-neighbor).
+
+    OSM mapeia bairros de Rio Branco como pontos, não polígonos (ver data/README.md).
+    Centróide da unidade em CRS métrico (SIRGAS 2000 / UTM 19S, EPSG:31979) e
+    sjoin_nearest contra a camada de bairros. Unidade cujo bairro mais próximo
+    esteja a mais de `max_m` metros fica com `bairro=None` (ex. setor rural
+    distante do núcleo urbano).
+    """
+    if not os.path.isfile(bairros_path):
+        print(f"[bairros] {bairros_path} não encontrado — coluna bairro ficará nula")
+        gdf["bairro"] = None
+        return gdf
+    bairros = gpd.read_file(bairros_path).to_crs(epsg=epsg_metrico)
+    bairros = bairros[bairros["nome"].notna() & (bairros["nome"] != "")]
+    if bairros.empty:
+        print("[bairros] camada vazia — coluna bairro ficará nula")
+        gdf["bairro"] = None
+        return gdf
+    bairros = (bairros[["nome", "geometry"]]
+               .rename(columns={"nome": "bairro"})
+               .reset_index(drop=True))
+
+    u = gdf[["geometry"]].to_crs(epsg=epsg_metrico).copy()
+    u["geometry"] = u.geometry.centroid
+    u = u.reset_index().rename(columns={"index": "_i"})
+
+    j = gpd.sjoin_nearest(u, bairros, how="left", distance_col="_dist")
+    j = j.sort_values("_dist").drop_duplicates("_i", keep="first")
+    j = j.set_index("_i").sort_index()
+
+    gdf = gdf.copy()
+    gdf["bairro"] = j["bairro"]
+    dist = j["_dist"].round(0)
+    gdf.loc[dist > max_m, "bairro"] = None
+
+    n_atrib = int(gdf["bairro"].notna().sum())
+    print(f"[bairros] atribuídos {n_atrib}/{len(gdf)} setores "
+          f"(cutoff {max_m:.0f} m, mediana_dist={dist.median():.0f} m)")
+    return gdf
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--unidades", required=True)
@@ -192,6 +234,12 @@ def main():
                     help="raio (m) do buffer usado pra amostrar pixels dos setores cinzas")
     ap.add_argument("--min-pixels-interp", type=int, default=50,
                     help="mínimo de pixels LST válidos no buffer para aceitar a interpolação")
+    ap.add_argument("--bairros-gpkg", default="data/bairros_rb.gpkg",
+                    help="camada de pontos de bairro OSM (ver scripts/fetch_bairros_osm.py)")
+    ap.add_argument("--bairro-max-m", type=float, default=3000,
+                    help="distância máxima (m) do centróide do setor ao ponto de bairro mais próximo")
+    ap.add_argument("--sem-bairros", action="store_true",
+                    help="pula o nearest-join com bairros_rb.gpkg")
     args = ap.parse_args()
     os.makedirs(C.OUT_DIR, exist_ok=True)
 
@@ -210,6 +258,11 @@ def main():
 
     gdf = load_units(args.unidades, args.dissolver, crs)
     print(f"{len(gdf)} unidades")
+
+    if args.sem_bairros:
+        gdf["bairro"] = None
+    else:
+        gdf = join_bairro_osm(gdf, args.bairros_gpkg, max_m=args.bairro_max_m)
 
     parts = [
         zonal(gdf, lst_tif, ["mean", "percentile_90", "count"], "lst_"),
@@ -260,9 +313,9 @@ def main():
     gdf.loc[g.index, "rank"] = g["rank"]
     gdf["rank"] = gdf["rank"].astype("Int64")
 
-    cols = ["rank", "nome", "indice_prioridade", "lst_mean", "lst_percentile_90", "anomalia_calor",
-            "ndvi_atual_mean", "ndvi_delta", "perda_ha", "perda_pct", "area_ha", "cobertura_calor",
-            "interpolado"]
+    cols = ["rank", "nome", "bairro", "indice_prioridade", "lst_mean", "lst_percentile_90",
+            "anomalia_calor", "ndvi_atual_mean", "ndvi_delta", "perda_ha", "perda_pct",
+            "area_ha", "cobertura_calor", "interpolado"]
     if args.arborizacao:
         cols.append(args.col_arbor)
     gdf = gdf.sort_values("rank", na_position="last")
@@ -274,7 +327,7 @@ def main():
         "ano_atual": C.YEAR_NOW, "ano_base": C.YEAR_BASE,
         "lst_media_cidade": round(lst_mean, 2), "lst_p75_cidade": round(lst_p75, 2),
         "perda_total_ha": round(float(gdf["perda_ha"].sum()), 1),
-        "top5_prioridade": g.sort_values("rank").head(5)[["nome", "indice_prioridade", "lst_mean"]]
+        "top5_prioridade": g.sort_values("rank").head(5)[["nome", "bairro", "indice_prioridade", "lst_mean"]]
                             .round(2).to_dict("records"),
     }
 
