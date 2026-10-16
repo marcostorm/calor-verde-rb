@@ -118,14 +118,18 @@ def sample_raster(points, raster):
     return vals
 
 
-def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px, px_area):
+def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px,
+                          px_area, min_pixels=50):
     """Preenche setores sem cobertura amostrando pixels dentro de um buffer da geometria.
 
     Para cada setor com ok=False, calcula zonal stats numa versão da geometria
-    expandida por buffer_m metros. O critério de cobertura dentro do buffer é
-    metade do min_cobertura original — já que o buffer é usado justamente onde
-    o setor em si não tem pixels bons, exigir o mesmo rigor eliminaria quase
-    tudo. Setores isolados (sem pixels válidos nem no buffer) ficam cinzas.
+    expandida por buffer_m metros. Critério de aceitação:
+      - cobertura LST do buffer >= min_cobertura / 5  (relaxado, pois o buffer é
+        justamente usado onde o setor em si não tem pixels bons), **e**
+      - pelo menos min_pixels pixels LST válidos (default 50 ≈ 4,5 ha), pra
+        garantir que a média não seja estatisticamente frágil demais mesmo em
+        buffers de setores pequenos.
+    Setores isolados (sem pixels válidos nem no buffer) ficam cinzas.
 
     gdf: GeoDataFrame em CRS métrico (buffer é em metros).
     rasters: dict com paths de lst, ndvi_now, ndvi_base, loss.
@@ -150,9 +154,10 @@ def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px
     perda_ha_buf = perda_buf["perda_sum"].fillna(0).values * px_area / 1e4
     ndvi_delta_buf = ndvi_buf["ndvi_atual_mean"].values - base_buf["ndvi_base_mean"].values
 
-    thresh = min_cobertura / 2
+    thresh = min_cobertura / 5
+    counts = lst_buf["lst_count"].values
     for i, pos in enumerate(needy_pos):
-        if cob[i] < thresh or np.isnan(lst_buf["lst_mean"].iat[i]):
+        if cob[i] < thresh or counts[i] < min_pixels or np.isnan(lst_buf["lst_mean"].iat[i]):
             continue
         row = g.index[pos]
         g.at[row, "lst_mean"] = float(lst_buf["lst_mean"].iat[i])
@@ -179,8 +184,10 @@ def main():
     ap.add_argument("--sem-pois", action="store_true")
     ap.add_argument("--sem-interpolar", action="store_true",
                     help="desativa interpolação por buffer dos setores sem cobertura LST")
-    ap.add_argument("--buffer-interp", type=float, default=500,
+    ap.add_argument("--buffer-interp", type=float, default=1500,
                     help="raio (m) do buffer usado pra amostrar pixels dos setores cinzas")
+    ap.add_argument("--min-pixels-interp", type=int, default=50,
+                    help="mínimo de pixels LST válidos no buffer para aceitar a interpolação")
     args = ap.parse_args()
     os.makedirs(C.OUT_DIR, exist_ok=True)
 
@@ -228,7 +235,8 @@ def main():
         gdf = interpolate_by_buffer(gdf, ok, rasters,
                                     buffer_m=args.buffer_interp,
                                     min_cobertura=args.min_cobertura,
-                                    lst_px=lst_px, px_area=px_area)
+                                    lst_px=lst_px, px_area=px_area,
+                                    min_pixels=args.min_pixels_interp)
         gdf["anomalia_calor"] = gdf["lst_mean"] - lst_mean
         n_interp = int(gdf["interpolado"].sum())
         print(f"interpoladas: {n_interp} unidades (buffer {args.buffer_interp:.0f} m)")
