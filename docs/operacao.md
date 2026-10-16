@@ -117,6 +117,27 @@ A pasta `snapshots/` **nunca é sobrescrita**; cada ano/rodada entra num subdir
 próprio. Granularidade a critério: `2026`, `2026-09`, `2026-10-16` são todos
 válidos. `compare_runs.py` aceita qualquer um como `dir_antigo`.
 
+## Atualizar série temporal (`scripts/trends.py`)
+
+Depois de congelar um snapshot novo, atualize a série temporal:
+
+```bash
+.venv/bin/python scripts/trends.py
+```
+
+Varre `snapshots/YYYY/ranking.csv` e grava `data/out/trends/setor_lst.csv`
+com uma coluna por ano, `delta_total`, `delta_anual_media` e `alerta` (setores
+cuja variação total está acima de `média_cidade + 1σ_cidade` — "esquentando
+acima do normal da cidade").
+
+Com só 1 ano disponível, o script roda, escreve o CSV com só uma coluna e
+avisa que tendências precisam de ≥2 anos.
+
+Flags úteis:
+
+- `--col lst_percentile_90` segue outra coluna (default: `lst_mean`)
+- `--snapshots dir` e `--out dir` para rodar fora dos defaults
+
 ## Atualizar dependências
 
 As versões em `requirements.txt` estão pinadas. Para atualizar com segurança:
