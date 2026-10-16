@@ -56,6 +56,11 @@
   button:hover{background:var(--bg-strong)}
   button:active{background:var(--border-strong);color:#fff}
   a{color:var(--accent)}
+  .export{display:flex;gap:8px;align-items:center;margin:12px 0 16px}
+  .export .meta{color:var(--text-faint);font-size:11px;margin-left:auto;font-style:italic}
+  .export a.link{color:var(--accent);font-size:12px;text-decoration:none;border-bottom:1px solid var(--border-strong);padding-bottom:1px}
+  .export a.link:hover{color:var(--text);border-color:var(--accent)}
+  .print-header{display:none}
   @media (max-width: 768px) {
     html, body { height: auto; }
     #map { position: static; width: 100%; height: 55vh; }
@@ -66,13 +71,16 @@
     svg#qa-hist, svg#qa-cob { width: 100%; max-width: 340px; height: auto; }
   }
   @media print {
-    #map { position: static; width: 100%; height: 500px; break-after: page; }
-    #side { position: static; width: 100%; border: none; padding: 0; }
+    html, body { background: #fff; }
+    #map { position: static; width: 100%; height: 480px; break-after: page; }
+    #side { position: static; width: 100%; border: none; padding: 0 }
+    .print-header { display: block; border-bottom: 1px solid var(--border-strong); padding-bottom: 8px; margin-bottom: 12px; }
+    .print-header small { color: var(--text-muted); font-size: 11px; }
     details { page-break-inside: avoid; }
     details > summary { font-size: 13px; }
     details:not([open]) { display: block; }
     details:not([open]) > :not(summary) { display: block !important; }
-    #qa-print, .ver, .toggle { display: none !important; }
+    .ver, .toggle, .export, #camadas-controls, #camadas-title { display: none !important; }
   }
 </style>
 </head>
@@ -82,6 +90,17 @@
   <h1>Calor &amp; Verde — Rio Branco</h1>
   <div class="sub">Prioridade de plantio por setor censitário (IBGE 2022). Dados: Landsat/Sentinel-2, estação seca jun–set.</div>
 
+  <div class="print-header">
+    <h1 style="margin:0 0 2px">Calor &amp; Verde — Rio Branco</h1>
+    <small>Prioridade de plantio por setor censitário · <span id="print-date"></span></small>
+  </div>
+
+  <div class="export">
+    <button id="btn-pdf" title="Abre o diálogo de impressão — escolha 'Salvar como PDF'">Baixar PDF</button>
+    <button id="btn-png" title="Gera um PNG da sidebar atual (sem o mapa)">Baixar PNG</button>
+    <a class="link" href="metodo.html">Metodologia</a>
+  </div>
+
   <div class="ver">
     <b>Versão do ranking:</b><br>
     <label><input type="radio" name="ver" value="conservador" checked> Conservador — só setores com ≥50% de pixels válidos de calor</label>
@@ -90,15 +109,17 @@
 
   <div id="resumo">carregando…</div>
 
-  <h2>Camadas</h2>
-  <label class="toggle"><input type="checkbox" id="t-pri" checked> Choropleth</label>
-  <div style="margin-left:20px;margin-bottom:6px">
-    <label><input type="radio" name="modo" value="prioridade" checked> por prioridade (0–100)</label><br>
-    <label><input type="radio" name="modo" value="lst"> por temperatura (°C)</label>
+  <h2 id="camadas-title">Camadas</h2>
+  <div id="camadas-controls">
+    <label class="toggle"><input type="checkbox" id="t-pri" checked> Choropleth</label>
+    <div style="margin-left:20px;margin-bottom:6px">
+      <label><input type="radio" name="modo" value="prioridade" checked> por prioridade (0–100)</label><br>
+      <label><input type="radio" name="modo" value="lst"> por temperatura (°C)</label>
+    </div>
+    <label class="toggle"><input type="checkbox" id="t-edu" checked> Escolas</label>
+    <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
+    <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
   </div>
-  <label class="toggle"><input type="checkbox" id="t-edu" checked> Escolas</label>
-  <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
-  <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
 
   <h2 id="top-title">Top 10 setores</h2>
   <table id="top"><thead><tr><td><b>rank</b></td><td><b>setor</b></td><td><b>bairro</b></td><td class="r"><b>índice</b></td><td class="r"><b>LST</b></td></tr></thead><tbody></tbody></table>
@@ -164,7 +185,6 @@
     <svg id="qa-hist" width="340" height="80" style="background:#fff;border:1px solid #eee"></svg>
     <h3 style="font-size:12px;margin:10px 0 4px">Cobertura LST por setor</h3>
     <svg id="qa-cob" width="340" height="60" style="background:#fff;border:1px solid #eee"></svg>
-    <button id="qa-print" style="margin-top:10px;padding:4px 10px;font-size:12px;cursor:pointer">Imprimir / salvar PDF</button>
   </details>
 </aside>
 
@@ -443,8 +463,39 @@ document.getElementById('t-only-interp').onchange = e => {
   });
 };
 
-// Botão imprimir / salvar PDF
-document.getElementById('qa-print').onclick = () => window.print();
+// --- Export (PDF via window.print; PNG via modern-screenshot CDN) ---
+document.getElementById('print-date').textContent =
+  new Date().toLocaleDateString('pt-BR', {year:'numeric', month:'long', day:'numeric'});
+
+document.getElementById('btn-pdf').onclick = () => window.print();
+
+document.getElementById('btn-png').onclick = async () => {
+  const btn = document.getElementById('btn-png');
+  const orig = btn.textContent;
+  btn.textContent = 'gerando…'; btn.disabled = true;
+  try {
+    if (!window.modernScreenshot) {
+      await new Promise((ok, err) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.4.39/dist/index.umd.js';
+        s.onload = ok; s.onerror = () => err(new Error('falha ao carregar modern-screenshot'));
+        document.head.appendChild(s);
+      });
+    }
+    const url = await window.modernScreenshot.domToPng(document.getElementById('side'), {
+      scale: 2, backgroundColor: '#fdf6ec',
+    });
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `calor-verde-rb_${currentVer}_${stamp}.png`;
+    a.click();
+  } catch (e) {
+    alert('Erro gerando PNG: ' + e.message + '\nTente "Baixar PDF" ou use o screenshot do sistema.');
+  } finally {
+    btn.textContent = orig; btn.disabled = false;
+  }
+};
 
 // Carrega QA junto com o resto
 loadQA(currentVer);

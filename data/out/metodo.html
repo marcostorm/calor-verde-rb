@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>O método — Calor &amp; Verde Rio Branco</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Como o estudo Calor &amp; Verde identifica onde plantar árvores primeiro em Rio Branco. Metodologia resumida pra gestão pública e jornalismo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --serif:'Fraunces',ui-serif,Georgia,'Times New Roman',serif;
+    --sans:'Inter',system-ui,-apple-system,sans-serif;
+    --bg-page:#fdf6ec;
+    --bg-card:#faf1dc;
+    --bg-strong:#f3e5c8;
+    --border-soft:#e8dcc5;
+    --border-strong:#d4a373;
+    --text:#2a2420;
+    --text-muted:#6b5e52;
+    --accent:#8b4513;
+    --cold:#ffffb2;
+    --warm:#fd8d3c;
+    --hot:#b10026;
+  }
+  html,body{margin:0;background:var(--bg-page);color:var(--text);font-family:var(--sans);line-height:1.6}
+  .page{max-width:720px;margin:0 auto;padding:48px 24px 96px}
+  header{margin-bottom:40px}
+  header .back{color:var(--accent);font-size:13px;text-decoration:none;border-bottom:1px solid var(--border-strong);padding-bottom:1px}
+  header .back:hover{color:var(--text);border-color:var(--accent)}
+  h1{font-family:var(--serif);font-size:40px;font-weight:700;font-variation-settings:"opsz" 72;letter-spacing:-.02em;line-height:1.08;margin:16px 0 8px}
+  .lede{font-family:var(--serif);font-size:19px;font-weight:400;font-variation-settings:"opsz" 24;line-height:1.5;color:var(--text-muted);margin:0 0 24px}
+  h2{font-family:var(--serif);font-size:24px;font-weight:600;font-variation-settings:"opsz" 24;margin:48px 0 12px;letter-spacing:-.005em}
+  h3{font-family:var(--serif);font-size:17px;font-weight:600;font-variation-settings:"opsz" 18;margin:24px 0 6px;color:var(--text)}
+  p{margin:0 0 14px;font-size:16px}
+  .section-num{color:var(--accent);font-variant-numeric:tabular-nums;font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;display:block;margin-top:48px;margin-bottom:4px}
+  .ingredients{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 28px}
+  .ingredients .card{background:var(--bg-card);border:1px solid var(--border-strong);border-radius:3px;padding:14px}
+  .ingredients h4{font-family:var(--serif);font-size:16px;margin:0 0 4px;color:var(--accent)}
+  .ingredients .weight{font-variant-numeric:tabular-nums;color:var(--text-muted);font-size:12px;letter-spacing:.03em}
+  .ingredients p{font-size:13.5px;line-height:1.45;margin:6px 0 0}
+  .formula{font-family:var(--serif);font-size:19px;background:var(--bg-strong);padding:16px 20px;border-radius:3px;text-align:center;margin:16px 0 24px;font-variant-numeric:tabular-nums}
+  .formula .weight{color:var(--accent);font-weight:600}
+  .scale{display:flex;align-items:center;gap:0;margin:16px 0 8px;height:28px}
+  .scale .step{flex:1;height:100%}
+  .scale-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:28px}
+  .limits{background:#fff;border-left:3px solid var(--border-strong);padding:16px 20px;border-radius:0 3px 3px 0;margin:20px 0}
+  .limits h3{margin-top:0;color:var(--accent)}
+  .limits ul{margin:8px 0 0;padding-left:20px}
+  .limits li{margin-bottom:8px;font-size:14.5px}
+  .refs{border-top:1px solid var(--border-soft);padding-top:24px;margin-top:48px;font-size:13.5px;color:var(--text-muted)}
+  .refs a{color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--border-strong)}
+  .refs a:hover{color:var(--text);border-color:var(--accent)}
+  .refs dl{display:grid;grid-template-columns:140px 1fr;gap:4px 16px;margin:0}
+  .refs dt{font-weight:500;color:var(--text)}
+  .refs dd{margin:0}
+  @media (max-width:640px){
+    .page{padding:24px 16px 48px}
+    h1{font-size:30px}
+    h2{font-size:20px}
+    .ingredients{grid-template-columns:1fr;gap:8px}
+    .refs dl{grid-template-columns:1fr;gap:0}
+    .refs dt{margin-top:10px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <a href="./" class="back">← Voltar ao mapa</a>
+  <h1>O método em uma página</h1>
+  <p class="lede">Como o estudo <em>Calor &amp; Verde</em> identifica onde Rio Branco deveria plantar árvores primeiro — e por quê a resposta não é "o lugar mais quente".</p>
+</header>
+
+<p>Rio Branco está no coração da Amazônia. Mas, dentro da cidade, o verde não se distribui por igual: alguns bairros têm sombra, outros têm asfalto e telhado puro. O estudo mede essa diferença bairro a bairro e ordena por prioridade de plantio.</p>
+
+<p>Toda a análise usa dados públicos (satélites e IBGE) e código aberto. Qualquer pessoa pode rodar de novo e chegar nos mesmos números.</p>
+
+<span class="section-num">01 · O problema</span>
+<h2>Por que faltar árvore importa</h2>
+<p>Em uma cidade, cada árvore é um aparelho de resfriamento gratuito: faz sombra no chão, no telhado e nas paredes; evapora água e diminui a temperatura do ar; filtra parte da poluição. Onde a cobertura cai, a superfície pode ficar 10 °C mais quente que o entorno arborizado — e quem mora, estuda ou trabalha ali paga essa conta com saúde.</p>
+<p>Rio Branco tem 669 setores censitários do IBGE 2022 (unidades menores que bairro). O estudo compara todos.</p>
+
+<span class="section-num">02 · Os três ingredientes</span>
+<h2>O que mede o índice</h2>
+<div class="ingredients">
+  <div class="card">
+    <h4>Calor</h4>
+    <span class="weight">peso 50%</span>
+    <p>Temperatura da superfície (Landsat 8/9), estação seca jun–set. Mede o quanto o chão irradia — asfalto queima mais que mata.</p>
+  </div>
+  <div class="card">
+    <h4>Falta de verde</h4>
+    <span class="weight">peso 30%</span>
+    <p>NDVI atual (Sentinel-2) — índice de vegetação. Quanto mais baixo, menos árvore/mato no setor.</p>
+  </div>
+  <div class="card">
+    <h4>Perda recente</h4>
+    <span class="weight">peso 20%</span>
+    <p>Pixels que eram verdes em 2019 e deixaram de ser até 2026. Captura corte, queimada ou seca severa.</p>
+  </div>
+</div>
+
+<p>Cada ingrediente é normalizado entre 0 e 1 comparando todos os setores entre si; depois somados com os pesos acima:</p>
+<div class="formula">
+  Índice = <span class="weight">0,5</span> × calor + <span class="weight">0,3</span> × falta de verde + <span class="weight">0,2</span> × perda
+</div>
+<p>O resultado vai de 0 a 100. Cem é o pior cenário possível (mais quente, menos verde, mais perda recente).</p>
+
+<span class="section-num">03 · Como ler o mapa</span>
+<h2>Cores, bordas e zonas quentes</h2>
+<p>As cores do choropleth são uma paleta científica (ColorBrewer YlOrRd), do amarelo claro ao vermelho vinho:</p>
+<div class="scale">
+  <div class="step" style="background:#ffffb2"></div>
+  <div class="step" style="background:#fed976"></div>
+  <div class="step" style="background:#feb24c"></div>
+  <div class="step" style="background:#fd8d3c"></div>
+  <div class="step" style="background:#fc4e2a"></div>
+  <div class="step" style="background:#e31a1c"></div>
+  <div class="step" style="background:#b10026"></div>
+</div>
+<div class="scale-labels"><span>baixa prioridade</span><span>crítica</span></div>
+
+<h3>Setor com borda tracejada</h3>
+<p>Quando o Landsat teve nuvem demais sobre um setor, estimamos o LST usando os pixels dos setores vizinhos (dentro de 3,5 km, respeitando o contexto urbano/rural). Esses setores aparecem com borda tracejada dourada no mapa — pra deixar explícito que o número é interpolado, não medido.</p>
+
+<h3>Zona quente</h3>
+<p>Pixel ou ponto (escola, posto, parada) onde a temperatura da superfície está no quartil mais alto da cidade. É onde o estresse térmico é maior. O resumo da sidebar mostra quantas escolas, unidades de saúde e pontos de ônibus estão em zona quente.</p>
+
+<h3>Versão conservadora vs. ampla</h3>
+<p>Dois ranking lado a lado:</p>
+<ul>
+  <li><strong>Conservador</strong> (padrão): só setores com pelo menos 50% dos pixels de LST válidos. Mais robusto, melhor pra decisão pública.</li>
+  <li><strong>Ampla</strong>: inclui setores com apenas 20% de cobertura. Cobre mais área do mapa, mas é mais ruidoso nas bordas.</li>
+</ul>
+
+<span class="section-num">04 · Honestidade metodológica</span>
+<h2>O que isso <em>não</em> diz</h2>
+<div class="limits">
+  <h3>Limites a honrar antes de citar</h3>
+  <ul>
+    <li><strong>Temperatura da superfície ≠ temperatura do ar.</strong> O Landsat mede o quanto o chão irradia; termômetro em sombra marca menos. Ainda assim, LST serve pra comparar áreas entre si — e a diferença que importa aqui é relativa.</li>
+    <li><strong>Nuvem persistente é a maior fonte de ruído.</strong> Mesmo com interpolação, 7% dos setores (os cinzas no mapa) ficaram sem dado em nenhuma versão. Zona rural distante é a mais afetada.</li>
+    <li><strong>Bairros vêm do OpenStreetMap</strong>, não da prefeitura. Nomes podem repetir (há dois "Centro") e divisão é informal. O setor censitário IBGE é a unidade formal.</li>
+    <li><strong>O índice não considera densidade populacional.</strong> Setor com alta prioridade e pouca gente ainda importa (saúde pública individual), mas priorização política pode querer somar impacto demográfico — isso fica como filtro adicional, não entra na métrica base.</li>
+    <li><strong>Pesos são escolhas, não lei da natureza.</strong> 50/30/20 é defensável mas revisável — está documentado em <code>config.py</code> e pode ser rodado com outros valores. O código é aberto justamente pra permitir isso.</li>
+  </ul>
+</div>
+
+<span class="section-num">05 · Pra ir mais fundo</span>
+<h2>Referências técnicas</h2>
+<div class="refs">
+<dl>
+  <dt>Documentação completa</dt>
+  <dd><a href="https://github.com/marcostorm/calor-verde-rb/tree/main/docs">docs/</a> no repositório — metodologia, operação, glossário, resultados por rodada e roadmap</dd>
+
+  <dt>Código-fonte</dt>
+  <dd><a href="https://github.com/marcostorm/calor-verde-rb">github.com/marcostorm/calor-verde-rb</a> — Python, open source, reprodutível</dd>
+
+  <dt>Dados-fonte</dt>
+  <dd>Landsat 8/9 (NASA/USGS) via Google Earth Engine · Sentinel-2 (ESA) · setores censitários IBGE 2022 · bairros e POIs OpenStreetMap</dd>
+
+  <dt>Como citar</dt>
+  <dd>Ver <a href="https://github.com/marcostorm/calor-verde-rb/blob/main/CITATION.md">CITATION.md</a> no repositório</dd>
+
+  <dt>Autor</dt>
+  <dd>Marcos Storm · Rio Branco, AC · 2026</dd>
+</dl>
+</div>
+</div>
+</body>
+</html>
