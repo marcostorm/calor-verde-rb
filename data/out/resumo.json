@@ -24,16 +24,26 @@
       "lst_mean": 44.38
     },
     {
+      "nome": "120040105000037",
+      "bairro": "Floresta",
+      "indice_prioridade": 89.3,
+      "lst_mean": 43.55
+    },
+    {
       "nome": "120040105000655",
       "bairro": "João Eduardo I",
       "indice_prioridade": 89.17,
       "lst_mean": 44.54
-    },
-    {
-      "nome": "120040105000061",
-      "bairro": "Aeroporto Velho",
-      "indice_prioridade": 89.04,
-      "lst_mean": 43.76
     }
-  ]
+  ],
+  "pois_em_zona_quente": {
+    "educacao": 142,
+    "ponto_onibus": 55,
+    "saude": 30
+  },
+  "pois_total": {
+    "educacao": 214,
+    "ponto_onibus": 57,
+    "saude": 41
+  }
 }

@@ -1,6 +1,6 @@
 {
 "type": "FeatureCollection",
-"name": "pois_calor",
+"name": "pois_calor.geojson",
 "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
 "features": [
 { "type": "Feature", "properties": { "osm_id": "node/1485115036", "nome": "Sol", "categoria": "ponto_onibus", "lst": 41.07708740234375, "zona_quente": true }, "geometry": { "type": "Point", "coordinates": [ -67.7896692, -9.9620567 ] } },
