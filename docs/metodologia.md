@@ -53,7 +53,27 @@ Para cada setor censitário (`data/setores_rb.gpkg`, filtrado por `CD_MUN = 1200
 | `perda_pct` | `100 × perda_sum / perda_count` |
 | `anomalia_calor` | `lst_mean − média LST da cidade` |
 
-Setores com `cobertura_calor < min-cobertura` **não entram no ranking** (ficam cinza no mapa). Threshold padrão: 0,5. Alternativa salva: 0,2.
+Setores com `cobertura_calor < min-cobertura` **não entram no ranking direto**. Threshold padrão: 0,5. Alternativa salva: 0,2.
+
+## 5a. Interpolação por buffer (preenche setores sem cobertura)
+
+Para setores que ficariam fora do ranking por falta de pixels LST válidos (nuvem persistente), uma etapa de recuperação roda **antes** do índice:
+
+1. Expande a geometria do setor com um buffer de `buffer-interp` metros (padrão **3500 m**).
+2. Recalcula zonal stats de LST, NDVI atual, NDVI base e perda dentro do buffer.
+3. Aceita a interpolação se **duas** condições forem atendidas:
+   - cobertura LST do buffer ≥ `min-cobertura / 5` (10% no conservador, 4% no amplo), e
+   - pelo menos **50 pixels LST válidos** no buffer (≈ 4,5 ha de dado real, independente do tamanho do setor — evita que setores pequenos aceitem interpolações baseadas em pouquíssimos pixels).
+4. Marca `interpolado = true` no setor. O ranking usa esses valores normalmente.
+
+**Por que buffer e não vizinhos (IDW)?** IDW copia valores do setor mais próximo, criando clusters artificiais quando vários setores cinza compartilham o mesmo vizinho dominante (top-N viram todos iguais). Buffer amostra pixels reais da vizinhança imediata — cada setor recebe uma combinação diferente de pixels, preservando a diversidade do ranking.
+
+**O que ainda fica cinza:** setores sem pixels LST válidos suficientes num raio de 3,5 km — tipicamente rurais isolados fora do AOI urbano. Setores em manchas grandes de nuvem persistente (2º Distrito, Belo Jardim/Santo Afonso) costumam ser alcançados por esse raio.
+
+Flags:
+- `--sem-interpolar` desativa (default: ON).
+- `--buffer-interp N` ajusta o raio em metros (default 3500).
+- `--min-pixels-interp N` ajusta o mínimo de pixels no buffer (default 50).
 
 ## 6. Índice de prioridade
 
@@ -92,6 +112,6 @@ Para cada POI, LST é amostrado no raster. "Zona quente" = LST ≥ p75 da cidade
 
 1. **LST não é temperatura do ar.** É quanto a superfície irradia ao meio-dia local (~10h30 em Rio Branco).
 2. **NDVI cai por seca e queimada**, não só por corte. Validar perdas com imagem de alta resolução ou focos INPE.
-3. **Cobertura de nuvem** descarta setores com `< min-cobertura`. Áreas persistentemente nubladas ficam sem avaliação (buracos cinza no mapa).
+3. **Cobertura de nuvem** descarta setores com `< min-cobertura` sem fallback direto. A interpolação por buffer (seção 5a) recupera a maioria usando pixels de um raio de 3,5 km, mas setores sem dado nenhum nesse raio permanecem cinzas no mapa (tipicamente rurais isolados). Setores interpolados aparecem com borda tracejada dourada e são tratados como estimativa (não medição direta no polígono do setor).
 4. **OSM pode ter completude variável** em POIs — a contagem de escolas/saúde reflete o que está mapeado, não a realidade oficial da Semed/Sesacre.
 5. **O ranking é relativo**: num ano em que a cidade inteira está mais quente, os valores absolutos sobem, mas as posições relativas são estáveis (confirmado empiricamente — Top-3 idêntico entre 2025 e 2026).

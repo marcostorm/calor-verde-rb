@@ -14,6 +14,7 @@ Esta documentação: `/home/marcos/Documentos/calor-verde-rb`
 | [operacao.md](operacao.md) | Como instalar, autenticar, rodar o pipeline e abrir o visualizador. |
 | [decisoes.md](decisoes.md) | Decisões feitas durante o setup (AOI, min-cobertura, paleta de cores, versão de dados). |
 | [resultados-2026.md](resultados-2026.md) | Snapshot do estado atual: números-chave, top-10 e observações. |
+| [roadmap.md](roadmap.md) | Fases planejadas de evolução (hardening, deploy, nomes de bairros, longitudinal, fontes complementares). |
 
 ## Resumo em uma página
 

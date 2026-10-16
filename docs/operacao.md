@@ -117,7 +117,8 @@ r = requests.post(OVERPASS, data={"data": q}, headers=headers, timeout=120)
 ### Muitos setores urbanos ficam cinza no mapa
 Pode ser:
 1. **AOI pequena demais** — ver `config.py:AOI_BBOX`. Deve cobrir o bbox dos setores urbanos com buffer. Para Rio Branco: `[-67.939, -10.117, -67.652, -9.886]`.
-2. **Nuvem persistente** na estação seca — baixe `--min-cobertura` para 0,2 ou amplie `DRY_MONTHS`.
+2. **Nuvem persistente** na estação seca — baixe `--min-cobertura` para 0,2, amplie `DRY_MONTHS`, ou aumente `--buffer-interp` (ex. `--buffer-interp 1000`) para a interpolação alcançar vizinhos mais distantes.
+3. **Interpolação desativada** — a interpolação por buffer é default-ON; só fica fora se você passar `--sem-interpolar`.
 
 ### Dissolve por `NM_BAIRRO` retorna 0 unidades
 Rio Branco **não tem** bairros oficializados no IBGE 2022 (campo `NM_BAIRRO` é nulo em 100% dos setores). Use ranking por setor (sem `--dissolver`), ou importe uma camada de bairros da Prefeitura/OSM e faça spatial-join antes.
