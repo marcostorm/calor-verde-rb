@@ -3,6 +3,10 @@
 Cruza temperatura de superfície, perda de vegetação e arborização do IBGE por bairro/setor
 censitário e gera um ranking de **prioridade de plantio**.
 
+**Visualizador público:** <https://marcostorm.github.io/calor-verde-rb/>
+(publicado via GitHub Pages a cada push na `main` que altere `data/out/`; workflow em
+`.github/workflows/pages.yml`).
+
 ## Instalação
 ```bash
 pip install -r requirements.txt
