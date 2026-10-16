@@ -32,7 +32,12 @@ from rasterstats import zonal_stats
 
 import config as C
 
-OVERPASS = "https://overpass-api.de/api/interpreter"
+OVERPASS_MIRRORS = (
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.openstreetmap.ru/api/interpreter",
+    "https://overpass.openstreetmap.fr/api/interpreter",
+)
 
 logger = logging.getLogger("analyze")
 
@@ -183,10 +188,24 @@ def fetch_pois(bbox):
     out center tags;
     """
     headers = {"User-Agent": "calor-verde-rb/0.1 (contact: mhstorms@gmail.com)"}
-    r = requests.post(OVERPASS, data={"data": q}, headers=headers, timeout=120)
-    r.raise_for_status()
+    payload = None
+    last_err = None
+    for mirror in OVERPASS_MIRRORS:
+        try:
+            r = requests.post(mirror, data={"data": q}, headers=headers, timeout=120)
+            r.raise_for_status()
+            payload = r.json()
+            logger.info("[pois] overpass ok: %s", mirror)
+            break
+        except Exception as e:
+            logger.warning("[pois] overpass falhou em %s: %s", mirror, e)
+            last_err = e
+    if payload is None:
+        raise RuntimeError(
+            f"todos os {len(OVERPASS_MIRRORS)} mirrors Overpass falharam; último: {last_err}"
+        )
     rows = []
-    for el in r.json()["elements"]:
+    for el in payload["elements"]:
         lat = el.get("lat") or el.get("center", {}).get("lat")
         lon = el.get("lon") or el.get("center", {}).get("lon")
         if lat is None:

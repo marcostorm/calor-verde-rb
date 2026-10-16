@@ -187,3 +187,62 @@ def test_read_raster_returns_float32(fixture_dir):
     assert arr.dtype.name == "float32", (
         f"read_raster devolveu {arr.dtype}; precisa ser float32 (ver ec5c364)"
     )
+
+
+def test_fetch_pois_fails_over_to_next_mirror(monkeypatch):
+    """fetch_pois tenta cada mirror Overpass em ordem; se o primeiro retorna
+    502, cai no próximo e devolve o payload. Protege contra o incidente
+    operacional de Overpass instável que bloqueou a regeração dos resumos."""
+    import analyze
+    import requests as rq
+
+    calls = []
+
+    class _FakeResponse:
+        def __init__(self, status, body=None):
+            self.status_code = status
+            self._body = body
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise rq.exceptions.HTTPError(f"{self.status_code} fake")
+
+        def json(self):
+            return self._body
+
+    def fake_post(url, data=None, headers=None, timeout=None):
+        calls.append(url)
+        if len(calls) == 1:
+            return _FakeResponse(502)
+        return _FakeResponse(200, {
+            "elements": [
+                {"type": "node", "id": 1, "lat": -9.97, "lon": -67.81,
+                 "tags": {"amenity": "school", "name": "Escola Teste"}},
+            ],
+        })
+
+    monkeypatch.setattr(analyze.requests, "post", fake_post)
+    gdf = analyze.fetch_pois((-67.9, -10.1, -67.6, -9.9))
+
+    assert len(calls) == 2, f"esperava 2 mirrors tentados; chamou {len(calls)}"
+    assert calls[0] == analyze.OVERPASS_MIRRORS[0]
+    assert calls[1] == analyze.OVERPASS_MIRRORS[1]
+    assert len(gdf) == 1
+    assert gdf.iloc[0]["categoria"] == "educacao"
+
+
+def test_fetch_pois_raises_when_all_mirrors_fail(monkeypatch):
+    """Se TODOS os mirrors falham, fetch_pois levanta RuntimeError
+    explícito — não enterra o erro nem retorna dado silenciosamente vazio."""
+    import analyze
+    import requests as rq
+
+    class _FakeFail:
+        status_code = 502
+        def raise_for_status(self):
+            raise rq.exceptions.HTTPError("502 fake")
+
+    monkeypatch.setattr(analyze.requests, "post",
+                        lambda *a, **kw: _FakeFail())
+    with pytest.raises(RuntimeError, match="todos os.*mirrors Overpass falharam"):
+        analyze.fetch_pois((-67.9, -10.1, -67.6, -9.9))
