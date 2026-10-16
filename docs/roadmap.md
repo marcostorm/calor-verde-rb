@@ -49,7 +49,7 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 
 **Entregáveis:**
 
-✅ 2.1 **Camada auxiliar de bairros não-oficiais** em `data/bairros_rb.gpkg` (feito em 2026-10-16, commit TBD). Fetcher em `scripts/fetch_bairros_osm.py` com retry em 4 mirrors Overpass; bbox do município extraído dinamicamente de `data/setores_rb.gpkg`. Resultado: 134 pontos (126 suburb + 6 neighbourhood + 2 quarter; nenhum admin_level=9|10 em RB). Nearest-join com setores cobre 100% dos 669 setores; mediana 401 m, zero setor urbano a >2 km. `data/README.md` documenta origem, método e 4 limitações conhecidas (pontos em vez de polígonos, 4 nomes duplicados, cobertura periférica em zona rural, dependência de atualização OSM).
+✅ 2.1 **Camada auxiliar de bairros não-oficiais** em `data/bairros_rb.gpkg` (feito em 2026-10-16, commit f6b819b). Fetcher em `scripts/fetch_bairros_osm.py` com retry em 4 mirrors Overpass; bbox do município extraído dinamicamente de `data/setores_rb.gpkg`. Resultado: 134 pontos (126 suburb + 6 neighbourhood + 2 quarter; nenhum admin_level=9|10 em RB). Nearest-join com setores cobre 100% dos 669 setores; mediana 401 m, zero setor urbano a >2 km. `data/README.md` documenta origem, método e 4 limitações conhecidas (pontos em vez de polígonos, 4 nomes duplicados, cobertura periférica em zona rural, dependência de atualização OSM).
 
 2.2 **Spatial-join no `analyze.py`:** cada setor ganha `bairro_osm` (ou nulo quando não há cobertura). Setores que caem em vários bairros usam a maioria por área.
 
