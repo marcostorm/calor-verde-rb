@@ -1,0 +1,35 @@
+{
+  "params": {
+    "fracao": 0.1,
+    "seed": 42,
+    "buffer_m": 3500,
+    "min_cobertura": 0.5,
+    "min_pixels": 50,
+    "modo": "consciente"
+  },
+  "n_total": 669,
+  "n_bons": 454,
+  "n_test": 45,
+  "n_aceitos_pelo_interp": 45,
+  "n_recusados_pelo_interp": 0,
+  "mae_C": 2.179,
+  "bias_C": -1.297,
+  "abserr_p50_C": 2.301,
+  "abserr_p90_C": 3.657,
+  "abserr_max_C": 5.603,
+  "r2": 0.205,
+  "truth_media_C": 38.75,
+  "pred_media_C": 37.46,
+  "por_situacao": {
+    "Rural": {
+      "n": 3,
+      "mae_C": 0.734,
+      "bias_C": 0.734
+    },
+    "Urbana": {
+      "n": 42,
+      "mae_C": 2.282,
+      "bias_C": -1.442
+    }
+  }
+}

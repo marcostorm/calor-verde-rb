@@ -29,6 +29,17 @@
   details dt{font-weight:600;color:#333;margin-top:6px}
   details dd{margin:0 0 2px;color:#555}
   .pill{display:inline-block;padding:1px 6px;border-radius:9px;font-size:10px;background:#eef;color:#447;margin-left:4px}
+  button{background:#fafafa;border:1px solid #ccc;border-radius:3px}
+  button:hover{background:#eee}
+  @media print {
+    #map { position: static; width: 100%; height: 500px; break-after: page; }
+    #side { position: static; width: 100%; border: none; padding: 0; }
+    details { page-break-inside: avoid; }
+    details > summary { font-size: 13px; }
+    details:not([open]) { display: block; }
+    details:not([open]) > :not(summary) { display: block !important; }
+    #qa-print, .ver, .toggle { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -107,8 +118,19 @@
       <dd>Versões do ranking com limiares de cobertura diferentes. <b>Conservador (50%)</b>: estatísticas mais robustas, melhor pra decisão pública. <b>Ampla (20%)</b>: cobre mais setores no mapa, mais ruidoso nas bordas.</dd>
 
       <dt>Setor interpolado</dt>
-      <dd>Setor que não tinha cobertura LST própria suficiente, mas cujas métricas foram estimadas amostrando os pixels de um buffer de 3,5 km ao redor da geometria. No mapa aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro.</dd>
+      <dd>Setor que não tinha cobertura LST própria suficiente, mas cujas métricas foram estimadas amostrando os pixels de um buffer de 3,5 km ao redor da geometria <b>restrito à mesma SITUACAO</b> (urbano amostra urbano, rural amostra rural). No mapa aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro.</dd>
     </dl>
+  </details>
+
+  <details id="qa-panel">
+    <summary>🧪 QA da rodada</summary>
+    <div id="qa-metrics">carregando…</div>
+    <div style="margin-top:8px"><label class="toggle"><input type="checkbox" id="t-only-interp"> Mostrar só interpolados</label></div>
+    <h3 style="font-size:12px;margin:10px 0 4px">Distribuição de LST (°C)</h3>
+    <svg id="qa-hist" width="340" height="80" style="background:#fff;border:1px solid #eee"></svg>
+    <h3 style="font-size:12px;margin:10px 0 4px">Cobertura LST por setor</h3>
+    <svg id="qa-cob" width="340" height="60" style="background:#fff;border:1px solid #eee"></svg>
+    <button id="qa-print" style="margin-top:10px;padding:4px 10px;font-size:12px;cursor:pointer">Imprimir / salvar PDF</button>
   </details>
 </aside>
 
@@ -292,6 +314,106 @@ document.querySelectorAll('input[name=modo]').forEach(r=>{
     currentModo = e.target.value;
     loadPri(currentVer);
   };
+});
+
+// ---- QA panel ----
+let qaData = null;  // { metrics: {...}, feats: [...] }
+
+function histogram(values, nBins, lo, hi){
+  const bins = new Array(nBins).fill(0);
+  const w = (hi - lo) / nBins;
+  values.forEach(v => {
+    if(v==null || isNaN(v)) return;
+    let i = Math.floor((v - lo) / w);
+    if(i < 0) i = 0; if(i >= nBins) i = nBins - 1;
+    bins[i]++;
+  });
+  return { bins, w };
+}
+
+function drawBars(svgId, bins, labelFn, barColor='#fd8d3c'){
+  const svg = document.getElementById(svgId);
+  const W = svg.width.baseVal.value, H = svg.height.baseVal.value;
+  const pad = 18, barW = (W - 2*pad) / bins.length;
+  const maxC = Math.max(...bins, 1);
+  svg.innerHTML = '';
+  bins.forEach((c, i)=>{
+    const h = (c / maxC) * (H - pad - 10);
+    const x = pad + i*barW, y = H - pad - h;
+    const r = `<rect x="${x+0.5}" y="${y}" width="${barW-1}" height="${h}" fill="${barColor}"/>`;
+    const label = labelFn(i);
+    const t = `<text x="${x + barW/2}" y="${H - 4}" font-size="9" text-anchor="middle" fill="#666">${label}</text>`;
+    svg.insertAdjacentHTML('beforeend', r + t);
+  });
+}
+
+function renderQA(){
+  if(!qaData) return;
+  const feats = qaData.feats;
+  const m = qaData.metrics;
+
+  // Métricas da cross-validation
+  const metricsHtml = m ? `
+    <div style="font-size:12px;line-height:1.5">
+      <b>Cross-validation da interpolação</b> (seed ${m.params.seed}, N=${m.n_test}):<br>
+      MAE: <b>${m.mae_C} °C</b>&nbsp;·&nbsp;R²: ${m.r2}<br>
+      bias: ${m.bias_C} °C&nbsp;·&nbsp;erro p90: ${m.abserr_p90_C} °C<br>
+      modo: ${m.params.modo}
+    </div>` : '<i style="font-size:12px">qa_interpolacao.json não encontrado — rode scripts/qa_interpolacao.py</i>';
+
+  const totalFeats = feats.length;
+  const interp = feats.filter(f => f.properties.interpolado).length;
+  const cinzas = feats.filter(f => f.properties.rank == null).length;
+  const ok = totalFeats - interp - cinzas;
+
+  const counts = `
+    <div style="font-size:12px;margin-top:8px">
+      <b>Cobertura dos ${totalFeats} setores:</b><br>
+      originais com dado: <b>${ok}</b>&nbsp;·&nbsp;interpolados: <b>${interp}</b>&nbsp;·&nbsp;cinzas: <b>${cinzas}</b>
+    </div>`;
+  document.getElementById('qa-metrics').innerHTML = metricsHtml + counts;
+
+  // Histograma LST (bins de 2°C entre 26 e 50)
+  const lo = 26, hi = 50, n = 12;
+  const h = histogram(feats.map(f => f.properties.lst_mean), n, lo, hi);
+  drawBars('qa-hist', h.bins, i => (lo + i*h.w).toFixed(0));
+
+  // Cobertura LST (percentis 0-100%)
+  const c = histogram(feats.map(f => (f.properties.cobertura_calor||0)*100), 10, 0, 100);
+  drawBars('qa-cob', c.bins, i => (i*10)+'%', '#4292c6');
+}
+
+function loadQA(ver){
+  qaData = { metrics: null, feats: [] };
+  Promise.all([
+    fetch(`unidades_prioridade_${ver}.geojson`).then(r=>r.json()),
+    fetch('qa_interpolacao.json').then(r=>r.ok?r.json():null).catch(()=>null),
+  ]).then(([gj, qa])=>{
+    qaData.feats = gj.features;
+    qaData.metrics = qa;
+    renderQA();
+  });
+}
+
+// toggle "só interpolados"
+document.getElementById('t-only-interp').onchange = e => {
+  if(!pri) return;
+  pri.eachLayer(l => {
+    const f = l.feature;
+    const show = e.target.checked ? !!f.properties.interpolado : true;
+    if(show && !map.hasLayer(l)) l.addTo(map);
+    if(!show) l.remove();
+  });
+};
+
+// Botão imprimir / salvar PDF
+document.getElementById('qa-print').onclick = () => window.print();
+
+// Carrega QA junto com o resto
+loadQA(currentVer);
+document.querySelectorAll('input[name=ver]').forEach(r=>{
+  const prev = r.onchange;
+  r.onchange = e => { if(prev) prev(e); loadQA(e.target.value); };
 });
 
 loadPri(currentVer);
