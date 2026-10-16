@@ -48,7 +48,7 @@ NODATA = (-9999, 255)
 def read_raster(path):
     """Lê a banda 1 como float com NaN no lugar de nodata."""
     with rasterio.open(path) as src:
-        arr = src.read(1).astype("float64")
+        arr = src.read(1).astype("float32")
         if src.nodata is not None:
             arr[arr == src.nodata] = np.nan
         transform, res = src.transform, src.res
@@ -190,7 +190,7 @@ def _mask_lst_by_situacao(lst_tif, gdf, grupo_val, situacao_col):
     """
     from rasterio.features import rasterize
     with rasterio.open(lst_tif) as src:
-        arr = src.read(1).astype("float64")
+        arr = src.read(1).astype("float32")
         if src.nodata is not None:
             arr[arr == src.nodata] = np.nan
         transform = src.transform
