@@ -46,7 +46,11 @@
   <div id="resumo">carregando…</div>
 
   <h2>Camadas</h2>
-  <label class="toggle"><input type="checkbox" id="t-pri" checked> Prioridade de plantio</label>
+  <label class="toggle"><input type="checkbox" id="t-pri" checked> Choropleth</label>
+  <div style="margin-left:20px;margin-bottom:6px">
+    <label><input type="radio" name="modo" value="prioridade" checked> por prioridade (0–100)</label><br>
+    <label><input type="radio" name="modo" value="lst"> por temperatura (°C)</label>
+  </div>
   <label class="toggle"><input type="checkbox" id="t-edu" checked> Escolas</label>
   <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
   <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
@@ -112,15 +116,34 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   {attribution:'© OpenStreetMap', maxZoom:19}).addTo(map);
 
 const PALETTE = ['#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026'];
-function color(v){
+function colorPri(v){
   if(v==null) return '#ccc';
   const b = [10,25,40,55,70,85];
   for(let i=0;i<b.length;i++) if(v<b[i]) return PALETTE[i];
   return PALETTE[6];
 }
+function colorLST(v){
+  if(v==null) return '#ccc';
+  const b = [28,32,36,40,44,48];  // °C bins calibrados pra Rio Branco (estação seca)
+  for(let i=0;i<b.length;i++) if(v<b[i]) return PALETTE[i];
+  return PALETTE[6];
+}
+const COLOR_FNS = { prioridade: colorPri, lst: colorLST };
+const COLOR_PROP = { prioridade: 'indice_prioridade', lst: 'lst_mean' };
+const LEGEND_SPECS = {
+  prioridade: {
+    title: 'Prioridade',
+    bins: [[0,'<10 — baixa'],[10,'10–25'],[25,'25–40'],[40,'40–55'],[55,'55–70'],[70,'70–85'],[85,'≥85 — crítica']]
+  },
+  lst: {
+    title: 'Temperatura (°C)',
+    bins: [[0,'<28 °C'],[28,'28–32'],[32,'32–36'],[36,'36–40'],[40,'40–44'],[44,'44–48'],[48,'≥48 °C']]
+  }
+};
 
 let pri, edu, sau, bus, legend;
 let currentVer = 'conservador';
+let currentModo = 'prioridade';
 
 const TOOLTIPS = {
   'LST média cidade': 'Temperatura média da superfície (Landsat) na mancha urbana durante a estação seca',
@@ -157,12 +180,14 @@ function loadPri(ver){
   clearPri();
   const file = `unidades_prioridade_${ver}.geojson`;
   fetch(file).then(r=>r.json()).then(gj=>{
+    const fn = COLOR_FNS[currentModo];
+    const prop = COLOR_PROP[currentModo];
     pri = L.geoJSON(gj, {
       style: f => f.properties.interpolado ? ({
-        fillColor: color(f.properties.indice_prioridade),
+        fillColor: fn(f.properties[prop]),
         color: '#b8860b', weight: 1.0, fillOpacity: 0.5, dashArray: '3,3'
       }) : ({
-        fillColor: color(f.properties.indice_prioridade),
+        fillColor: fn(f.properties[prop]),
         color: '#333', weight: 0.4, fillOpacity: 0.75
       }),
       onEachFeature: (f,l)=>l.bindPopup(pop(f))
@@ -182,12 +207,12 @@ function loadPri(ver){
       tr.onclick = ()=>{ const b=L.geoJSON(f).getBounds(); map.fitBounds(b.pad(0.5)); };
       tb.appendChild(tr);
     });
+    const spec = LEGEND_SPECS[currentModo];
     legend = L.control({position:'bottomright'});
     legend.onAdd = () => {
       const d = L.DomUtil.create('div','legend');
-      d.innerHTML = '<b>Prioridade</b><br>' +
-        [[0,'<10 — baixa'],[10,'10–25'],[25,'25–40'],[40,'40–55'],[55,'55–70'],[70,'70–85'],[85,'≥85 — crítica']]
-        .map(([v,l])=>`<i style="background:${color(v+1)}"></i>${l}`).join('<br>') +
+      d.innerHTML = `<b>${spec.title}</b><br>` +
+        spec.bins.map(([v,l])=>`<i style="background:${fn(v+0.1)}"></i>${l}`).join('<br>') +
         '<br><i style="background:#ccc"></i>sem dado';
       return d;
     };
@@ -248,6 +273,14 @@ document.querySelectorAll('input[name=ver]').forEach(r=>{
     currentVer = e.target.value;
     loadPri(currentVer);
     loadResumo(currentVer);
+  };
+});
+
+// radio modo (prioridade / lst)
+document.querySelectorAll('input[name=modo]').forEach(r=>{
+  r.onchange = e => {
+    currentModo = e.target.value;
+    loadPri(currentVer);
   };
 });
 
