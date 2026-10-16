@@ -56,7 +56,7 @@
   <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
 
   <h2 id="top-title">Top 10 setores</h2>
-  <table id="top"><thead><tr><td><b>rank</b></td><td><b>setor</b></td><td class="r"><b>índice</b></td><td class="r"><b>LST</b></td></tr></thead><tbody></tbody></table>
+  <table id="top"><thead><tr><td><b>rank</b></td><td><b>setor</b></td><td><b>bairro</b></td><td class="r"><b>índice</b></td><td class="r"><b>LST</b></td></tr></thead><tbody></tbody></table>
 
   <details>
     <summary>📖 Glossário</summary>
@@ -94,6 +94,9 @@
       <dt>Setor censitário</dt>
       <dd>Menor unidade do IBGE para o Censo — polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). O IBGE não oficializou divisão por bairros, por isso o ranking é por setor.</dd>
 
+      <dt>Bairro</dt>
+      <dd>Rótulo informativo vindo do OpenStreetMap (<code>place=suburb</code>, <code>neighbourhood</code>, <code>quarter</code>). OSM só mapeia bairros de Rio Branco como pontos, então o nome é atribuído ao setor por vizinho mais próximo (até 3 km do centróide). Setor rural distante fica sem bairro. Nomes podem repetir em partes diferentes da cidade (ex. há dois "Centro").</dd>
+
       <dt>Estação seca</dt>
       <dd>Jun–set na Amazônia. Mais cenas aproveitáveis dos satélites (menos nuvem) e também o período de pico de calor.</dd>
 
@@ -104,7 +107,7 @@
       <dd>Versões do ranking com limiares de cobertura diferentes. <b>Conservador (50%)</b>: estatísticas mais robustas, melhor pra decisão pública. <b>Ampla (20%)</b>: cobre mais setores no mapa, mais ruidoso nas bordas.</dd>
 
       <dt>Setor interpolado</dt>
-      <dd>Setor que não tinha cobertura LST própria suficiente, mas cujas métricas foram estimadas amostrando os pixels de um buffer de 500 m ao redor da geometria. No mapa aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro.</dd>
+      <dd>Setor que não tinha cobertura LST própria suficiente, mas cujas métricas foram estimadas amostrando os pixels de um buffer de 3,5 km ao redor da geometria. No mapa aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro.</dd>
     </dl>
   </details>
 </aside>
@@ -161,7 +164,8 @@ function pop(f){
   const p = f.properties;
   const safe = (v, d=1) => v==null ? '—' : v.toFixed(d);
   const tag = p.interpolado ? ' <span style="color:#b8860b">(interpolado por buffer)</span>' : '';
-  return `<b>Setor ${p.nome}</b>${tag}<br>
+  const nomeBairro = p.bairro ? ` · ${p.bairro}` : '';
+  return `<b>Setor ${p.nome}${nomeBairro}</b>${tag}<br>
     <b>Prioridade: ${safe(p.indice_prioridade)}</b> (rank ${p.rank ?? '—'})<br>
     <b>LST</b>: média ${safe(p.lst_mean)} °C · p90 ${safe(p.lst_percentile_90)} °C<br>
     <b>Anomalia</b>: ${p.anomalia_calor>0?'+':''}${safe(p.anomalia_calor)} °C vs. cidade<br>
@@ -205,7 +209,8 @@ function loadPri(ver){
     feats.forEach(f=>{
       const p = f.properties;
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${p.rank}</td><td>${p.nome}</td>
+      tr.innerHTML = `<td>${p.rank}</td><td>${p.nome.slice(-3)}</td>
+        <td>${p.bairro || '—'}</td>
         <td class="r">${p.indice_prioridade.toFixed(1)}</td>
         <td class="r">${p.lst_mean.toFixed(1)}°</td>`;
       tr.style.cursor='pointer';

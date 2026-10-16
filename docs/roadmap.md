@@ -53,10 +53,7 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 
 ✅ 2.2 **Spatial-join no `analyze.py`** (feito em 2026-10-16, commit 1f6db76). Como OSM mapeia bairros de RB como pontos (não polígonos), usamos `sjoin_nearest` em CRS métrico (SIRGAS 2000 / UTM 19S, EPSG:31979). Função `join_bairro_osm(gdf, path, max_m)` chamada logo após `load_units()`. Setor cujo centróide esteja a mais de `--bairro-max-m` (default 3000) metros do ponto mais próximo recebe `bairro=None` — comum em setor rural. Resultado: 573/669 setores (85,6%) com bairro atribuído, mediana 398 m. QA pós-pipeline passou sem regressão (lst_media_cidade e perda_total_ha idênticos ao estado pré-join). Flags: `--bairros-gpkg`, `--bairro-max-m`, `--sem-bairros`.
 
-2.3 **Enriquecimento dos outputs:**
-   - `ranking.csv`: nova coluna `bairro`
-   - `unidades_prioridade.geojson`: propriedade `bairro` no popup
-   - Lista Top-10 do viewer: label vira `"Setor 314 — Floresta Sul"` em vez de `120040105000314`
+✅ 2.3 **Enriquecimento dos outputs** (feito em 2026-10-16, commit TBD). ranking.csv e geojson já ganharam `bairro` na Fase 2.2. Nesta etapa, atualizado o viewer: (a) popup do setor passa a mostrar "Setor 314 · Vila da Amizade"; (b) tabela Top-10 ganhou coluna "bairro" (com código do setor abreviado para 3 dígitos pra caber na sidebar); (c) glossário tem agora entrada "Bairro" explicando origem OSM, método nearest e limitação de pontos+repetições; (d) de brinde, corrigido texto de "buffer de 500 m" para "3,5 km" na entrada "Setor interpolado" (estava desatualizado desde a Fase 1).
 
 2.4 **Deploy público do viewer:**
    - Mover `data/out/` para um subdir publicável (ex. `public/` ou configurar GitHub Pages pra `data/out/`)
