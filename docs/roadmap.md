@@ -110,7 +110,7 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 
 **Entregáveis:**
 
-✅ 5.1 **Estrutura `snapshots/{ano}/`** (feito em 2026-10-16, commit TBD). Snapshot inaugural em `snapshots/2026/` com os 3 arquivos oficiais da versão conservadora (resumo, ranking, geojson); `snapshots/README.md` documenta a convenção de nomes (ano / YYYY-MM / YYYY-MM-DD) e `snapshots/2026/README.md` registra parâmetros, dados-fonte, métricas da cidade e top-5. `operacao.md` ganhou seção "Congelar uma rodada em `snapshots/`" com o fluxo (compare_runs → cp → commit). A partir desta pasta é possível responder a perguntas longitudinais (ex.: setor X esquentou nos últimos 3 anos?) sem rerodar nada.
+✅ 5.1 **Estrutura `snapshots/{ano}/`** (feito em 2026-10-16, commit 4816a74). Snapshot inaugural em `snapshots/2026/` com os 3 arquivos oficiais da versão conservadora (resumo, ranking, geojson); `snapshots/README.md` documenta a convenção de nomes (ano / YYYY-MM / YYYY-MM-DD) e `snapshots/2026/README.md` registra parâmetros, dados-fonte, métricas da cidade e top-5. `operacao.md` ganhou seção "Congelar uma rodada em `snapshots/`" com o fluxo (compare_runs → cp → commit). A partir desta pasta é possível responder a perguntas longitudinais (ex.: setor X esquentou nos últimos 3 anos?) sem rerodar nada.
 
 5.2 **`trends.py`:** série temporal por setor
    - Para cada setor, plotar LST ao longo dos anos disponíveis
