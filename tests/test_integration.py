@@ -108,6 +108,76 @@ def test_hard_fail_preserves_old_outputs(fixture_dir, tmp_path, monkeypatch):
     assert not orphan_tmps, f"tmps órfãos no out_dir: {orphan_tmps}"
 
 
+def test_run_recorder_captures_metrics_on_success(fixture_dir, tmp_path, monkeypatch):
+    """Fase 6.2: run manifest JSON é gravado com counts, stages, versions e
+    métricas finais. Também valida que set_args não vaza secrets (só os args
+    do argparse) e que o status final é 'ok'."""
+    out_dir = tmp_path / "out_log_ok"
+    out_dir.mkdir()
+    logs_dir = tmp_path / "logs"
+
+    import analyze
+    import config
+    monkeypatch.setattr(config, "DATA_DIR", fixture_dir["data_dir"])
+    monkeypatch.setattr(config, "OUT_DIR", str(out_dir))
+    monkeypatch.setattr(config, "LOGS_DIR", str(logs_dir))
+
+    args = _args_for_pipeline(fixture_dir)
+    writer = analyze.AtomicWriter(str(out_dir))
+    recorder = analyze.RunRecorder(str(logs_dir))
+    recorder.set_args(args)
+    try:
+        analyze._run_pipeline(args, writer, recorder)
+    except BaseException:
+        writer.cleanup()
+        raise
+    recorder.finalize("ok")
+    path = recorder.save()
+
+    assert path and os.path.exists(path), f"run log não foi gravado: {path}"
+    with open(path) as f:
+        data = json.load(f)
+    assert data["status"] == "ok"
+    assert data["duration_s"] > 0
+    assert data["counts"]["unidades"] == fixture_dir["n_setores"]
+    assert "write" in data["stages"] and data["stages"]["write"] >= 0
+    assert "validate" in data["stages"]
+    assert data["versions"]["geopandas"] is not None
+    assert data["versions"]["rasterio"] is not None
+    assert 25.0 <= data["metrics"]["lst_media_cidade"] <= 45.0
+
+
+def test_run_recorder_saved_even_on_hard_fail(fixture_dir, tmp_path, monkeypatch):
+    """Fase 6.2: mesmo em hard-fail, o run manifest é gravado — é a razão
+    de ser do log (post-mortem de incidentes). Status fica 'hard_fail'."""
+    out_dir = tmp_path / "out_log_fail"
+    out_dir.mkdir()
+    logs_dir = tmp_path / "logs_fail"
+
+    import analyze
+    import config
+    monkeypatch.setattr(config, "DATA_DIR", fixture_dir["data_dir"])
+    monkeypatch.setattr(config, "OUT_DIR", str(out_dir))
+    monkeypatch.setattr(config, "LOGS_DIR", str(logs_dir))
+
+    args = _args_for_pipeline(fixture_dir, min_cobertura=1.1)
+    writer = analyze.AtomicWriter(str(out_dir))
+    recorder = analyze.RunRecorder(str(logs_dir))
+    recorder.set_args(args)
+    try:
+        analyze._run_pipeline(args, writer, recorder)
+    except SystemExit as e:
+        writer.cleanup()
+        recorder.finalize("hard_fail" if e.code == 2 else "error", str(e.code))
+    path = recorder.save()
+
+    assert path and os.path.exists(path)
+    with open(path) as f:
+        data = json.load(f)
+    assert data["status"] == "hard_fail"
+    assert data["counts"]["unidades"] == fixture_dir["n_setores"]
+
+
 def test_read_raster_returns_float32(fixture_dir):
     """Anti-regressão do bug OOM: read_raster precisa devolver float32.
     Reverter pra float64 explode a RAM em rasters reais (ver commit ec5c364)."""

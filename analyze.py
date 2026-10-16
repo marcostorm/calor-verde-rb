@@ -13,10 +13,15 @@ Saídas em data/out/:
   resumo.json                  números-chave para a home do site
 """
 import argparse
+import contextlib
 import glob
 import json
+import logging
 import os
 import sys
+import time
+from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
 
 import geopandas as gpd
 import numpy as np
@@ -28,6 +33,90 @@ from rasterstats import zonal_stats
 import config as C
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
+
+logger = logging.getLogger("analyze")
+
+
+class RunRecorder:
+    """Coleta métricas estruturadas de uma rodada do pipeline.
+
+    Grava `logs/run-<timestamp>.json` com args, versões de libs, duração por
+    etapa, counts e métricas finais — alimenta post-mortem de incidentes
+    sem precisar replicar a rodada.
+    """
+
+    _LIBS = ("geopandas", "rasterio", "rasterstats", "numpy", "pandas", "requests")
+
+    def __init__(self, logs_dir):
+        self.logs_dir = logs_dir
+        self.started_at = time.time()
+        self.ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        self.data = {
+            "timestamp": self.ts,
+            "status": "running",
+            "error": None,
+            "args": {},
+            "versions": self._collect_versions(),
+            "stages": {},
+            "counts": {},
+            "metrics": {},
+        }
+
+    @staticmethod
+    def _collect_versions():
+        v = {"python": sys.version.split()[0]}
+        for lib in RunRecorder._LIBS:
+            try:
+                v[lib] = version(lib)
+            except PackageNotFoundError:
+                v[lib] = None
+        return v
+
+    def set_args(self, args):
+        self.data["args"] = {k: v for k, v in vars(args).items()}
+
+    def set(self, key, value, bucket="metrics"):
+        self.data.setdefault(bucket, {})[key] = value
+
+    @contextlib.contextmanager
+    def stage(self, name):
+        t0 = time.time()
+        try:
+            yield
+        finally:
+            self.data["stages"][name] = round(time.time() - t0, 3)
+
+    def finalize(self, status, error=None):
+        self.data["status"] = status
+        self.data["error"] = error
+        self.data["duration_s"] = round(time.time() - self.started_at, 3)
+
+    def save(self):
+        os.makedirs(self.logs_dir, exist_ok=True)
+        path = os.path.join(self.logs_dir, f"run-{self.ts}.json")
+        with open(path, "w") as f:
+            json.dump(self.data, f, ensure_ascii=False, indent=2, default=str)
+        return path
+
+
+class _NullRecorder:
+    """Stand-in sem efeito pra quando o pipeline roda via teste (sem log)."""
+
+    def set_args(self, *a, **kw):
+        pass
+
+    def set(self, *a, **kw):
+        pass
+
+    @contextlib.contextmanager
+    def stage(self, name):
+        yield
+
+    def finalize(self, *a, **kw):
+        pass
+
+    def save(self):
+        return None
 
 
 def find(pattern):
@@ -244,8 +333,8 @@ def interpolate_consciente_sit(gdf, ok_mask, rasters, buffer_m, min_cobertura,
         n = int(got.sum())
         if n == 0:
             continue
-        print(f"[consciente/{grupo}] {n} setor(es) interpolado(s) com LST "
-              f"restrito a pixels '{grupo}'")
+        logger.info("[consciente/%s] %d setor(es) interpolado(s) com LST "
+                    "restrito a pixels '%s'", grupo, n, grupo)
         for col in ("lst_mean", "lst_percentile_90", "ndvi_atual_mean",
                     "ndvi_delta", "perda_pct"):
             if col in step.columns:
@@ -264,13 +353,14 @@ def join_bairro_osm(gdf, bairros_path, max_m=3000, epsg_metrico=31979):
     distante do núcleo urbano).
     """
     if not os.path.isfile(bairros_path):
-        print(f"[bairros] {bairros_path} não encontrado — coluna bairro ficará nula")
+        logger.warning("[bairros] %s não encontrado — coluna bairro ficará nula",
+                       bairros_path)
         gdf["bairro"] = None
         return gdf
     bairros = gpd.read_file(bairros_path).to_crs(epsg=epsg_metrico)
     bairros = bairros[bairros["nome"].notna() & (bairros["nome"] != "")]
     if bairros.empty:
-        print("[bairros] camada vazia — coluna bairro ficará nula")
+        logger.warning("[bairros] camada vazia — coluna bairro ficará nula")
         gdf["bairro"] = None
         return gdf
     bairros = (bairros[["nome", "geometry"]]
@@ -291,8 +381,8 @@ def join_bairro_osm(gdf, bairros_path, max_m=3000, epsg_metrico=31979):
     gdf.loc[dist > max_m, "bairro"] = None
 
     n_atrib = int(gdf["bairro"].notna().sum())
-    print(f"[bairros] atribuídos {n_atrib}/{len(gdf)} setores "
-          f"(cutoff {max_m:.0f} m, mediana_dist={dist.median():.0f} m)")
+    logger.info("[bairros] atribuídos %d/%d setores (cutoff %.0f m, mediana_dist=%.0f m)",
+                n_atrib, len(gdf), max_m, dist.median())
     return gdf
 
 
@@ -363,43 +453,66 @@ def main():
                     help="pula o nearest-join com bairros_rb.gpkg")
     args = ap.parse_args()
     os.makedirs(C.OUT_DIR, exist_ok=True)
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     writer = AtomicWriter(C.OUT_DIR)
+    recorder = RunRecorder(C.LOGS_DIR)
+    recorder.set_args(args)
     try:
-        _run_pipeline(args, writer)
-    except BaseException:
+        _run_pipeline(args, writer, recorder)
+    except SystemExit as e:
         writer.cleanup()
+        recorder.finalize("hard_fail" if e.code == 2 else "error", str(e.code))
         raise
-
-
-def _run_pipeline(args, writer):
-    lst_tif = find("lst_*.tif")
-    ndvi_now_tif = find(f"ndvi_{C.YEAR_NOW}.tif")
-    ndvi_base_tif = find(f"ndvi_{C.YEAR_BASE}.tif")
-    loss_tif = find("perda_*.tif")
-
-    with rasterio.open(loss_tif) as src:
-        crs = src.crs
-    _, _, px_area = read_raster(loss_tif)
-    lst_arr, _, lst_px = read_raster(lst_tif)
-    lst_all = lst_arr[~np.isnan(lst_arr)]
-    lst_p75 = float(np.percentile(lst_all, 75))
-    lst_mean = float(lst_all.mean())
-
-    gdf = load_units(args.unidades, args.dissolver, crs)
-    print(f"{len(gdf)} unidades")
-
-    if args.sem_bairros:
-        gdf["bairro"] = None
+    except BaseException as e:
+        writer.cleanup()
+        recorder.finalize("error", f"{type(e).__name__}: {e}")
+        raise
     else:
-        gdf = join_bairro_osm(gdf, args.bairros_gpkg, max_m=args.bairro_max_m)
+        recorder.finalize("ok")
+    finally:
+        try:
+            path = recorder.save()
+            if path:
+                logger.info("run log: %s", path)
+        except Exception as e:
+            logger.warning("falha ao gravar run log: %s", e)
 
-    parts = [
-        zonal(gdf, lst_tif, ["mean", "percentile_90", "count"], "lst_"),
-        zonal(gdf, ndvi_now_tif, ["mean"], "ndvi_atual_"),
-        zonal(gdf, ndvi_base_tif, ["mean"], "ndvi_base_"),
-        zonal(gdf, loss_tif, ["sum", "count"], "perda_"),
-    ]
-    gdf = gpd.GeoDataFrame(pd.concat([gdf] + parts, axis=1), geometry="geometry", crs=crs)
+
+def _run_pipeline(args, writer, recorder=None):
+    recorder = recorder or _NullRecorder()
+
+    with recorder.stage("load_rasters"):
+        lst_tif = find("lst_*.tif")
+        ndvi_now_tif = find(f"ndvi_{C.YEAR_NOW}.tif")
+        ndvi_base_tif = find(f"ndvi_{C.YEAR_BASE}.tif")
+        loss_tif = find("perda_*.tif")
+
+        with rasterio.open(loss_tif) as src:
+            crs = src.crs
+        _, _, px_area = read_raster(loss_tif)
+        lst_arr, _, lst_px = read_raster(lst_tif)
+        lst_all = lst_arr[~np.isnan(lst_arr)]
+        lst_p75 = float(np.percentile(lst_all, 75))
+        lst_mean = float(lst_all.mean())
+
+    with recorder.stage("load_units"):
+        gdf = load_units(args.unidades, args.dissolver, crs)
+        logger.info("%d unidades carregadas", len(gdf))
+        recorder.set("unidades", len(gdf), bucket="counts")
+
+        if args.sem_bairros:
+            gdf["bairro"] = None
+        else:
+            gdf = join_bairro_osm(gdf, args.bairros_gpkg, max_m=args.bairro_max_m)
+
+    with recorder.stage("zonal_stats"):
+        parts = [
+            zonal(gdf, lst_tif, ["mean", "percentile_90", "count"], "lst_"),
+            zonal(gdf, ndvi_now_tif, ["mean"], "ndvi_atual_"),
+            zonal(gdf, ndvi_base_tif, ["mean"], "ndvi_base_"),
+            zonal(gdf, loss_tif, ["sum", "count"], "perda_"),
+        ]
+        gdf = gpd.GeoDataFrame(pd.concat([gdf] + parts, axis=1), geometry="geometry", crs=crs)
 
     gdf["area_ha"] = gdf.geometry.area / 1e4
     gdf["cobertura_calor"] = (gdf["lst_count"] * lst_px / gdf.geometry.area).clip(upper=1)
@@ -416,27 +529,33 @@ def _run_pipeline(args, writer):
     ok = gdf["cobertura_calor"] >= args.min_cobertura
     gdf["interpolado"] = False
     if not args.sem_interpolar:
-        rasters = {"lst": lst_tif, "ndvi_now": ndvi_now_tif,
-                   "ndvi_base": ndvi_base_tif, "loss": loss_tif}
-        if args.interpolacao_ingenua or "SITUACAO" not in gdf.columns:
-            gdf = interpolate_by_buffer(gdf, ok, rasters,
-                                        buffer_m=args.buffer_interp,
-                                        min_cobertura=args.min_cobertura,
-                                        lst_px=lst_px, px_area=px_area,
-                                        min_pixels=args.min_pixels_interp)
-            modo = "ingênua"
-        else:
-            gdf = interpolate_consciente_sit(gdf, ok, rasters,
-                                             buffer_m=args.buffer_interp,
-                                             min_cobertura=args.min_cobertura,
-                                             lst_px=lst_px, px_area=px_area,
-                                             min_pixels=args.min_pixels_interp)
-            modo = "consciente de SITUACAO"
-        gdf["anomalia_calor"] = gdf["lst_mean"] - lst_mean
-        n_interp = int(gdf["interpolado"].sum())
-        print(f"interpoladas: {n_interp} unidades (buffer {args.buffer_interp:.0f} m, {modo})")
-        ok = ok | gdf["interpolado"]
+        with recorder.stage("interpolate"):
+            rasters = {"lst": lst_tif, "ndvi_now": ndvi_now_tif,
+                       "ndvi_base": ndvi_base_tif, "loss": loss_tif}
+            if args.interpolacao_ingenua or "SITUACAO" not in gdf.columns:
+                gdf = interpolate_by_buffer(gdf, ok, rasters,
+                                            buffer_m=args.buffer_interp,
+                                            min_cobertura=args.min_cobertura,
+                                            lst_px=lst_px, px_area=px_area,
+                                            min_pixels=args.min_pixels_interp)
+                modo = "ingênua"
+            else:
+                gdf = interpolate_consciente_sit(gdf, ok, rasters,
+                                                 buffer_m=args.buffer_interp,
+                                                 min_cobertura=args.min_cobertura,
+                                                 lst_px=lst_px, px_area=px_area,
+                                                 min_pixels=args.min_pixels_interp)
+                modo = "consciente de SITUACAO"
+            gdf["anomalia_calor"] = gdf["lst_mean"] - lst_mean
+            n_interp = int(gdf["interpolado"].sum())
+            logger.info("interpoladas: %d unidades (buffer %.0f m, %s)",
+                        n_interp, args.buffer_interp, modo)
+            recorder.set("interpolados", n_interp, bucket="counts")
+            recorder.set("modo_interpolacao", modo, bucket="counts")
+            ok = ok | gdf["interpolado"]
     g = gdf[ok].copy()
+    recorder.set("com_rank", int(ok.sum()), bucket="counts")
+    recorder.set("cinzas", int((~ok).sum()), bucket="counts")
     falta_verde = 1 - minmax(g["ndvi_atual_mean"])
     if args.arborizacao and g[args.col_arbor].notna().any():
         falta_verde = (falta_verde + (1 - minmax(g[args.col_arbor]))) / 2
@@ -457,34 +576,41 @@ def _run_pipeline(args, writer):
     if args.arborizacao:
         cols.append(args.col_arbor)
     gdf = gdf.sort_values("rank", na_position="last")
-    gdf[cols].round(3).to_csv(writer.path("ranking.csv"), index=False)
-    gdf[cols + ["geometry"]].round(3).to_crs("EPSG:4326").to_file(
-        writer.path("unidades_prioridade.geojson"), driver="GeoJSON")
 
-    resumo = {
-        "ano_atual": C.YEAR_NOW, "ano_base": C.YEAR_BASE,
-        "lst_media_cidade": round(lst_mean, 2), "lst_p75_cidade": round(lst_p75, 2),
-        "perda_total_ha": round(float(gdf["perda_ha"].sum()), 1),
-        "top5_prioridade": g.sort_values("rank").head(5)[["nome", "bairro", "indice_prioridade", "lst_mean"]]
-                            .round(2).to_dict("records"),
-    }
+    with recorder.stage("write"):
+        gdf[cols].round(3).to_csv(writer.path("ranking.csv"), index=False)
+        gdf[cols + ["geometry"]].round(3).to_crs("EPSG:4326").to_file(
+            writer.path("unidades_prioridade.geojson"), driver="GeoJSON")
 
-    if not args.sem_pois:
-        bbox = tuple(C.AOI_BBOX)
-        pois = fetch_pois(bbox)
-        pois["lst"] = sample_raster(pois, lst_tif)
-        pois["zona_quente"] = pois["lst"] >= lst_p75
-        pois.drop(columns=["lon", "lat"]).to_file(writer.path("pois_calor.geojson"),
-                                                  driver="GeoJSON")
-        resumo["pois_em_zona_quente"] = (
-            pois[pois.zona_quente].groupby("categoria").size().to_dict())
-        resumo["pois_total"] = pois.groupby("categoria").size().to_dict()
+        resumo = {
+            "ano_atual": C.YEAR_NOW, "ano_base": C.YEAR_BASE,
+            "lst_media_cidade": round(lst_mean, 2), "lst_p75_cidade": round(lst_p75, 2),
+            "perda_total_ha": round(float(gdf["perda_ha"].sum()), 1),
+            "top5_prioridade": g.sort_values("rank").head(5)[["nome", "bairro", "indice_prioridade", "lst_mean"]]
+                                .round(2).to_dict("records"),
+        }
 
-    with open(writer.path("resumo.json"), "w") as f:
-        json.dump(resumo, f, ensure_ascii=False, indent=2, default=int)
-    print(json.dumps(resumo, ensure_ascii=False, indent=2, default=int))
+        if not args.sem_pois:
+            bbox = tuple(C.AOI_BBOX)
+            pois = fetch_pois(bbox)
+            pois["lst"] = sample_raster(pois, lst_tif)
+            pois["zona_quente"] = pois["lst"] >= lst_p75
+            pois.drop(columns=["lon", "lat"]).to_file(writer.path("pois_calor.geojson"),
+                                                      driver="GeoJSON")
+            resumo["pois_em_zona_quente"] = (
+                pois[pois.zona_quente].groupby("categoria").size().to_dict())
+            resumo["pois_total"] = pois.groupby("categoria").size().to_dict()
 
-    validate_outputs(gdf, resumo, writer, args.sem_pois)
+        with open(writer.path("resumo.json"), "w") as f:
+            json.dump(resumo, f, ensure_ascii=False, indent=2, default=int)
+        print(json.dumps(resumo, ensure_ascii=False, indent=2, default=int))
+
+    for k in ("lst_media_cidade", "lst_p75_cidade", "perda_total_ha"):
+        recorder.set(k, resumo.get(k))
+    recorder.set("top5_prioridade", resumo.get("top5_prioridade"), bucket="metrics")
+
+    with recorder.stage("validate"):
+        validate_outputs(gdf, resumo, writer, args.sem_pois)
     writer.promote_all()
 
 
@@ -544,21 +670,22 @@ def validate_outputs(gdf, resumo, writer, sem_pois):
     soft(interp <= 6 * max(cinzas, 1),
          f"muitos interpolados vs. cinzas ({interp} interpolados para {cinzas} cinzas)")
 
-    print("\n=== QA ===")
-    print(f"total={total}  com_rank={com_rank} ({100*com_rank/total:.1f}%)  "
-          f"cinzas={cinzas}  interpolados={interp}")
-    print(f"lst_media={lst_media}°C  lst_p75={lst_p75}°C  perda_total={perda}ha")
+    logger.info("=== QA ===")
+    logger.info("total=%d  com_rank=%d (%.1f%%)  cinzas=%d  interpolados=%d",
+                total, com_rank, 100 * com_rank / total, cinzas, interp)
+    logger.info("lst_media=%s°C  lst_p75=%s°C  perda_total=%sha",
+                lst_media, lst_p75, perda)
     if soft_warns:
-        print("⚠ SOFT:")
+        logger.warning("checks SOFT:")
         for w in soft_warns:
-            print(f"  - {w}")
+            logger.warning("  - %s", w)
     if hard_fails:
-        print("✗ HARD:")
+        logger.error("checks HARD:")
         for f in hard_fails:
-            print(f"  - {f}")
+            logger.error("  - %s", f)
         sys.exit(2)
     if not soft_warns:
-        print("✓ todos os checks passaram")
+        logger.info("todos os checks passaram")
 
 
 if __name__ == "__main__":

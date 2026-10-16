@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .pytest_cache/
+logs/
 
 # baixado do IBGE (regenerável); mantemos só o filtro de Rio Branco
 data/AC_setores_CD2022.gpkg
