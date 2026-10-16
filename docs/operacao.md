@@ -92,6 +92,31 @@ Depois abra `http://localhost:8787/viewer.html` no navegador. Para parar o serve
 
 O visualizador carrega sozinho os três resumos, as duas versões do choropleth e os POIs. Switch de versão (rádio no topo do painel direito) recarrega sem precisar reload da página.
 
+## Congelar uma rodada em `snapshots/`
+
+Depois que a QA passa e `compare_runs.py` não mostra surpresas, promova a rodada
+conservadora como marco histórico:
+
+```bash
+# 1. Compare com o último snapshot (ex. ano anterior)
+.venv/bin/python scripts/compare_runs.py snapshots/2026 data/out
+
+# 2. Se OK, copie os 3 arquivos oficiais pra pasta datada
+year=2027
+mkdir -p snapshots/$year
+cp data/out/resumo.json data/out/ranking.csv data/out/unidades_prioridade.geojson \
+   snapshots/$year/
+# opcional: README com parâmetros, métricas e top-5 (ver snapshots/2026/README.md)
+
+# 3. Commit
+git add snapshots/$year
+git commit -m "snapshot: $year"
+```
+
+A pasta `snapshots/` **nunca é sobrescrita**; cada ano/rodada entra num subdir
+próprio. Granularidade a critério: `2026`, `2026-09`, `2026-10-16` são todos
+válidos. `compare_runs.py` aceita qualquer um como `dir_antigo`.
+
 ## Atualizar dependências
 
 As versões em `requirements.txt` estão pinadas. Para atualizar com segurança:
