@@ -138,8 +138,8 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
    - Se falhar no meio, outputs anteriores ficam intactos (hoje ficam parciais e consistentes com um estado quebrado)
 
 6.4 **GitHub Actions:**
-   - Workflow que roda o teste de integração a cada PR
-   - Workflow mensal que roda o pipeline completo com os rasters do mês e abre PR com os outputs atualizados
+   - ✅ Workflow `tests.yml` roda `pytest tests/` em push em `main` e em PR (feito em 2026-10-16). Triggers restritos aos paths relevantes (`analyze.py`, `config.py`, `scripts/`, `tests/`, `requirements*.txt`, o próprio workflow); concurrency cancela runs antigas do mesmo ref; cache de pip pelas hash dos requirements. Python 3.12, timeout 10 min.
+   - Workflow mensal que roda o pipeline completo com os rasters do mês e abre PR com os outputs atualizados **(pendente — depende de GEE auth no CI)**
 
 **Esforço:** 2-3 sessões. **Dependência:** nenhuma (pode rodar paralelo às outras).
 
