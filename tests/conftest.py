@@ -12,13 +12,17 @@ Padrões:
 - Setores: grade 5 colunas x 2 linhas, cobrindo todo o raster.
 """
 import os
+import sys
+from pathlib import Path
 
-import geopandas as gpd
-import numpy as np
-import pytest
-import rasterio
-from rasterio.transform import from_origin
-from shapely.geometry import box
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import geopandas as gpd  # noqa: E402
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
+import rasterio  # noqa: E402
+from rasterio.transform import from_origin  # noqa: E402
+from shapely.geometry import box  # noqa: E402
 
 CRS = "EPSG:31979"
 X0, Y0 = 620000.0, 8900000.0  # canto NW, UTM 19S aproximado de Rio Branco

@@ -6,28 +6,40 @@ refatores no analyze.py e pra atualização de dependências.
 """
 import json
 import os
-import subprocess
-import sys
+from argparse import Namespace
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
+
+def _args_for_pipeline(fixture_dir, **overrides):
+    base = dict(
+        unidades=fixture_dir["unidades"],
+        dissolver=None, arborizacao=None,
+        chave="nome", col_arbor="pct_arborizacao",
+        min_cobertura=0.5, sem_pois=True, sem_interpolar=True,
+        buffer_interp=3500, min_pixels_interp=50,
+        interpolacao_ingenua=False, bairros_gpkg="data/bairros_rb.gpkg",
+        bairro_max_m=3000, sem_bairros=True,
+    )
+    base.update(overrides)
+    return Namespace(**base)
 
 
-def test_analyze_end_to_end(fixture_dir):
-    env = os.environ.copy()
-    env["CALOR_VERDE_DATA_DIR"] = fixture_dir["data_dir"]
-    env["CALOR_VERDE_OUT_DIR"] = fixture_dir["out_dir"]
+def test_analyze_end_to_end(fixture_dir, monkeypatch):
+    import analyze
+    import config
+    monkeypatch.setattr(config, "DATA_DIR", fixture_dir["data_dir"])
+    monkeypatch.setattr(config, "OUT_DIR", fixture_dir["out_dir"])
 
-    cmd = [
-        sys.executable, "analyze.py",
-        "--unidades", fixture_dir["unidades"],
-        "--sem-pois", "--sem-bairros", "--sem-interpolar",
-        "--min-cobertura", "0.5",
-    ]
-    r = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True, timeout=60)
-    assert r.returncode == 0, f"analyze.py falhou:\nSTDOUT:\n{r.stdout}\nSTDERR:\n{r.stderr}"
+    args = _args_for_pipeline(fixture_dir)
+    writer = analyze.AtomicWriter(fixture_dir["out_dir"])
+    try:
+        analyze._run_pipeline(args, writer)
+    except BaseException:
+        writer.cleanup()
+        raise
 
     out = Path(fixture_dir["out_dir"])
     ranking = out / "ranking.csv"
@@ -57,20 +69,51 @@ def test_analyze_end_to_end(fixture_dir):
     assert len(gj["features"]) == fixture_dir["n_setores"]
 
 
+def test_hard_fail_preserves_old_outputs(fixture_dir, tmp_path, monkeypatch):
+    """Idempotência (Fase 6.3): se o pipeline falha depois de ter começado a
+    escrever, os outputs da rodada anterior ficam intactos e nenhum .tmp
+    sobra. Hard-fail forçado com --min-cobertura 1.1 (nenhum setor passa)."""
+    out_dir = tmp_path / "out_isolado"
+    out_dir.mkdir()
+    SENTINELS = {
+        "ranking.csv": "sentinela-ranking-antigo\n",
+        "resumo.json": '{"sentinela": "antigo"}\n',
+        "unidades_prioridade.geojson": "sentinela-geojson-antigo\n",
+    }
+    for name, content in SENTINELS.items():
+        (out_dir / name).write_text(content)
+
+    import analyze
+    import config
+    monkeypatch.setattr(config, "DATA_DIR", fixture_dir["data_dir"])
+    monkeypatch.setattr(config, "OUT_DIR", str(out_dir))
+
+    args = _args_for_pipeline(fixture_dir, min_cobertura=1.1)
+    writer = analyze.AtomicWriter(str(out_dir))
+    with pytest.raises(SystemExit) as excinfo:
+        try:
+            analyze._run_pipeline(args, writer)
+        except BaseException:
+            writer.cleanup()
+            raise
+    assert excinfo.value.code == 2
+
+    for name, expected in SENTINELS.items():
+        actual = (out_dir / name).read_text()
+        assert actual == expected, (
+            f"{name} foi sobrescrito; esperado sentinela, veio: {actual[:80]!r}"
+        )
+
+    orphan_tmps = list(out_dir.glob("*.tmp"))
+    assert not orphan_tmps, f"tmps órfãos no out_dir: {orphan_tmps}"
+
+
 def test_read_raster_returns_float32(fixture_dir):
     """Anti-regressão do bug OOM: read_raster precisa devolver float32.
     Reverter pra float64 explode a RAM em rasters reais (ver commit ec5c364)."""
-    import importlib
-
-    sys.path.insert(0, str(ROOT))
-    try:
-        analyze = importlib.import_module("analyze")
-        importlib.reload(analyze)
-        lst_path = os.path.join(fixture_dir["data_dir"], "lst_2026.tif")
-        arr, _, _ = analyze.read_raster(lst_path)
-        assert arr.dtype.name == "float32", (
-            f"read_raster devolveu {arr.dtype}; precisa ser float32 (ver ec5c364)"
-        )
-    finally:
-        if str(ROOT) in sys.path:
-            sys.path.remove(str(ROOT))
+    import analyze
+    lst_path = os.path.join(fixture_dir["data_dir"], "lst_2026.tif")
+    arr, _, _ = analyze.read_raster(lst_path)
+    assert arr.dtype.name == "float32", (
+        f"read_raster devolveu {arr.dtype}; precisa ser float32 (ver ec5c364)"
+    )

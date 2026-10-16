@@ -133,9 +133,7 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
    - Cada rodada escreve `logs/run-{timestamp}.json` com métricas (n unidades, n interpolados, tempo por etapa, versões de libs)
    - Útil pra debugar incidentes retroativos
 
-6.3 **Idempotência:**
-   - `analyze.py` escreve em arquivos temporários e renomeia atomicamente no final
-   - Se falhar no meio, outputs anteriores ficam intactos (hoje ficam parciais e consistentes com um estado quebrado)
+✅ 6.3 **Idempotência** (feito em 2026-10-16). Classe `AtomicWriter` em `analyze.py` dá path `<name>.tmp` pra cada escrita e expõe `promote_all()` (os.replace em bloco) e `cleanup()` (remove tmps). O corpo do pipeline foi extraído em `_run_pipeline(args, writer)`; `main()` envolve a chamada em try/except que invoca cleanup e re-levanta — pega hard-fail do `validate_outputs` (SystemExit), exceções do zonal_stats e Ctrl+C. `validate_outputs` passou a verificar os tmps (via `writer.tmp_for`) antes do promote; se falha, nenhum arquivo final é tocado. Novo teste `test_hard_fail_preserves_old_outputs` força `--min-cobertura 1.1` e confirma que (a) sentinelas em `out_dir` sobrevivem, (b) nenhum `.tmp` órfão fica. Testes end-to-end + idempotência + float32 todos in-process via `_run_pipeline`: suite caiu de 1,53 s (fase 6.1, 2 testes) pra **2,74 s com 3 testes** — ainda bem dentro do limite de 5 s.
 
 6.4 **GitHub Actions:**
    - ✅ Workflow `tests.yml` roda `pytest tests/` em push em `main` e em PR (feito em 2026-10-16, commit d3e76a1). Triggers restritos aos paths relevantes (`analyze.py`, `config.py`, `scripts/`, `tests/`, `requirements*.txt`, o próprio workflow); concurrency cancela runs antigas do mesmo ref; cache de pip pelas hash dos requirements. Python 3.12, timeout 10 min.

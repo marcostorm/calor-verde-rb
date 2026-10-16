@@ -296,6 +296,46 @@ def join_bairro_osm(gdf, bairros_path, max_m=3000, epsg_metrico=31979):
     return gdf
 
 
+class AtomicWriter:
+    """Escreve outputs em `<final>.tmp` e só promove ao nome final no sucesso.
+
+    Garante que, se o pipeline falhar no meio (crash, hard-fail de validação,
+    Ctrl+C), os arquivos de uma rodada anterior continuam intactos — nunca
+    um estado parcial e consistente com um pipeline quebrado. Cleanup remove
+    tmps órfãos.
+    """
+
+    def __init__(self, out_dir):
+        self.out_dir = out_dir
+        self.pairs = []
+
+    def path(self, name):
+        final = os.path.join(self.out_dir, name)
+        tmp = final + ".tmp"
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        self.pairs.append((tmp, final))
+        return tmp
+
+    def tmp_for(self, name):
+        final = os.path.join(self.out_dir, name)
+        for tmp, f in self.pairs:
+            if f == final:
+                return tmp
+        return None
+
+    def promote_all(self):
+        for tmp, final in self.pairs:
+            os.replace(tmp, final)
+
+    def cleanup(self):
+        for tmp, _ in self.pairs:
+            try:
+                os.remove(tmp)
+            except FileNotFoundError:
+                pass
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--unidades", required=True)
@@ -323,7 +363,15 @@ def main():
                     help="pula o nearest-join com bairros_rb.gpkg")
     args = ap.parse_args()
     os.makedirs(C.OUT_DIR, exist_ok=True)
+    writer = AtomicWriter(C.OUT_DIR)
+    try:
+        _run_pipeline(args, writer)
+    except BaseException:
+        writer.cleanup()
+        raise
 
+
+def _run_pipeline(args, writer):
     lst_tif = find("lst_*.tif")
     ndvi_now_tif = find(f"ndvi_{C.YEAR_NOW}.tif")
     ndvi_base_tif = find(f"ndvi_{C.YEAR_BASE}.tif")
@@ -409,9 +457,9 @@ def main():
     if args.arborizacao:
         cols.append(args.col_arbor)
     gdf = gdf.sort_values("rank", na_position="last")
-    gdf[cols].round(3).to_csv(os.path.join(C.OUT_DIR, "ranking.csv"), index=False)
+    gdf[cols].round(3).to_csv(writer.path("ranking.csv"), index=False)
     gdf[cols + ["geometry"]].round(3).to_crs("EPSG:4326").to_file(
-        os.path.join(C.OUT_DIR, "unidades_prioridade.geojson"), driver="GeoJSON")
+        writer.path("unidades_prioridade.geojson"), driver="GeoJSON")
 
     resumo = {
         "ano_atual": C.YEAR_NOW, "ano_base": C.YEAR_BASE,
@@ -426,21 +474,27 @@ def main():
         pois = fetch_pois(bbox)
         pois["lst"] = sample_raster(pois, lst_tif)
         pois["zona_quente"] = pois["lst"] >= lst_p75
-        pois.drop(columns=["lon", "lat"]).to_file(os.path.join(C.OUT_DIR, "pois_calor.geojson"),
+        pois.drop(columns=["lon", "lat"]).to_file(writer.path("pois_calor.geojson"),
                                                   driver="GeoJSON")
         resumo["pois_em_zona_quente"] = (
             pois[pois.zona_quente].groupby("categoria").size().to_dict())
         resumo["pois_total"] = pois.groupby("categoria").size().to_dict()
 
-    with open(os.path.join(C.OUT_DIR, "resumo.json"), "w") as f:
+    with open(writer.path("resumo.json"), "w") as f:
         json.dump(resumo, f, ensure_ascii=False, indent=2, default=int)
     print(json.dumps(resumo, ensure_ascii=False, indent=2, default=int))
 
-    validate_outputs(gdf, resumo, C.OUT_DIR, args.sem_pois)
+    validate_outputs(gdf, resumo, writer, args.sem_pois)
+    writer.promote_all()
 
 
-def validate_outputs(gdf, resumo, out_dir, sem_pois):
-    """Checks de sanidade pós-pipeline. Fail-hard em HARD, só WARN em SOFT."""
+def validate_outputs(gdf, resumo, writer, sem_pois):
+    """Checks de sanidade pós-pipeline. Fail-hard em HARD, só WARN em SOFT.
+
+    Opera nos arquivos .tmp do `writer` (ainda não promovidos). Se qualquer
+    hard-check falhar, promote_all() não roda e o cleanup remove os tmps —
+    outputs anteriores no OUT_DIR ficam intactos.
+    """
     hard_fails, soft_warns = [], []
 
     def hard(cond, msg):
@@ -473,12 +527,12 @@ def validate_outputs(gdf, resumo, out_dir, sem_pois):
          "top5 tem campos nulos")
 
     for f in ["ranking.csv", "unidades_prioridade.geojson", "resumo.json"]:
-        p = os.path.join(out_dir, f)
-        hard(os.path.exists(p) and os.path.getsize(p) > 0,
+        p = writer.tmp_for(f)
+        hard(p is not None and os.path.exists(p) and os.path.getsize(p) > 0,
              f"arquivo de saída ausente ou vazio: {f}")
     if not sem_pois:
-        p = os.path.join(out_dir, "pois_calor.geojson")
-        hard(os.path.exists(p) and os.path.getsize(p) > 0,
+        p = writer.tmp_for("pois_calor.geojson")
+        hard(p is not None and os.path.exists(p) and os.path.getsize(p) > 0,
              "pois_calor.geojson ausente ou vazio")
 
     soft(com_rank / max(total, 1) >= 0.85,
