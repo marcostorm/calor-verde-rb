@@ -25,5 +25,5 @@ CS_THRESHOLD = 0.6
 WEIGHTS = {"calor": 0.5, "falta_verde": 0.3, "perda": 0.2}
 
 GEE_PROJECT = os.environ.get("GEE_PROJECT")  # ID do seu projeto Google Cloud
-DATA_DIR = "data"
-OUT_DIR = "data/out"
+DATA_DIR = os.environ.get("CALOR_VERDE_DATA_DIR", "data")
+OUT_DIR = os.environ.get("CALOR_VERDE_OUT_DIR", os.path.join(DATA_DIR, "out"))
