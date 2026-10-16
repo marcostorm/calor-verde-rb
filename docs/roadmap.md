@@ -67,16 +67,11 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 
 **Entregáveis:**
 
-3.1 **Interpolação consciente de contexto:** filtrar pixels do buffer por `SITUACAO` compatível (urbano interpola com pixels de outros setores urbanos, rural com rurais). Precisa rasterizar a camada de SITUACAO uma vez e aplicar como máscara.
+✅ 3.3 **Cross-validation da interpolação** (feito em 2026-10-16, commit b90995a). `scripts/qa_interpolacao.py` sorteia 10% (seed 42) dos setores com cobertura ≥ 0,5, guarda `lst_mean` como truth, roda `interpolate_by_buffer` fingindo que não têm dado e compara. Reporta MAE, bias, p50/p90 do erro absoluto, R² e breakdown por SITUACAO. Baseline antes da Fase 3.1: **MAE 2,55 °C, bias -1,74 °C, R² -0,03** — o interpolador era pior que a média em setores urbanos (sintoma do viés de contaminação por vegetação). Escreve `data/out/qa_interpolacao.json`, consumido pelo painel do viewer (Fase 3.2).
 
-3.2 **Dashboard de QA embutido** no viewer:
-   - Painel adicional (abrir no detalhes) com histograma de LST, distribuição de cobertura, mapa só dos interpolados em cor distinta
-   - Botão "exportar relatório PDF" com snapshot das métricas
+✅ 3.1 **Interpolação consciente de contexto** (feito em 2026-10-16, commit aa88271). `_mask_lst_by_situacao` rasteriza máscara urbano/rural na grade nativa do LST; `interpolate_consciente_sit` faz um passe por grupo de SITUACAO com LST restrito; `zonal` estendido pra aceitar `(array, affine)` além de path. Default do analyze passa a ser consciente; flag `--interpolacao-ingenua` volta pra versão da Fase 1. **Impacto medido (seed 42, N=45): MAE 2,55→2,18 °C (-14%), R² -0,03→0,21, MAE rural -39%.** Compare_runs com snapshot anterior: top-5 preservado, 10 setores urbanos subiram até +5,94 pts (eram subestimados por contaminação do buffer). Snapshot 2026 atualizado pra refletir a metodologia atual; versão ingênua preservada no git history. Pendente: NDVI e perda ainda não mascarados por contexto (iteração futura se o MAE residual importar).
 
-3.3 **Cross-validation da interpolação:**
-   - Script `qa_interpolacao.py` que remove artificialmente 10% dos setores com dado bom, roda interpolação, compara estimado vs. medido
-   - Reporta erro médio (MAE em °C) e desvio
-   - Vira métrica da qualidade do pipeline, registrada em cada run
+✅ 3.2 **Dashboard de QA embutido no viewer** (feito em 2026-10-16, commit 67d3f60). Painel `<details>#qa-panel` com (a) métricas da cross-validation lidas de `qa_interpolacao.json`; (b) contagem de setores originais / interpolados / cinzas; (c) histograma SVG do LST (bins de 2 °C entre 26-50); (d) histograma de cobertura (0-100% em 10 bins); (e) toggle "mostrar só interpolados" filtrando o choropleth; (f) botão "imprimir / salvar PDF" com CSS `@media print` que estática o map+painel e esconde controles. Painel atualiza ao trocar de versão (conservador/amplo).
 
 **Esforço:** 2-3 sessões. **Dependência:** Fases 1 e 2.
 
