@@ -31,6 +31,15 @@
   .pill{display:inline-block;padding:1px 6px;border-radius:9px;font-size:10px;background:#eef;color:#447;margin-left:4px}
   button{background:#fafafa;border:1px solid #ccc;border-radius:3px}
   button:hover{background:#eee}
+  @media (max-width: 768px) {
+    html, body { height: auto; }
+    #map { position: static; width: 100%; height: 55vh; }
+    #side {
+      position: static; width: 100%; height: auto;
+      border-left: none; border-top: 1px solid #ddd;
+    }
+    svg#qa-hist, svg#qa-cob { width: 100%; max-width: 340px; height: auto; }
+  }
   @media print {
     #map { position: static; width: 100%; height: 500px; break-after: page; }
     #side { position: static; width: 100%; border: none; padding: 0; }
@@ -139,6 +148,9 @@
 const map = L.map('map').setView([-9.97, -67.81], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   {attribution:'© OpenStreetMap', maxZoom:19}).addTo(map);
+
+// Reajusta tiles quando o layout muda (rotação de celular, redimensionamento).
+window.addEventListener('resize', () => map.invalidateSize());
 
 const PALETTE = ['#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026'];
 function colorPri(v){
