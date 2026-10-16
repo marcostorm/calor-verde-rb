@@ -71,7 +71,11 @@ def load_units(path, dissolve, crs):
 
 
 def zonal(gdf, raster, stats, prefix):
-    arr, transform, _ = read_raster(raster)
+    """`raster` pode ser um path ou uma tupla (array, affine) pré-carregada."""
+    if isinstance(raster, tuple):
+        arr, transform = raster
+    else:
+        arr, transform, _ = read_raster(raster)
     res = zonal_stats(gdf, arr, affine=transform, stats=stats, nodata=-1e30)
     return pd.DataFrame(res).add_prefix(prefix)
 
@@ -176,6 +180,80 @@ def interpolate_by_buffer(gdf, ok_mask, rasters, buffer_m, min_cobertura, lst_px
     return g
 
 
+def _mask_lst_by_situacao(lst_tif, gdf, grupo_val, situacao_col):
+    """Retorna (array, affine) do LST com NaN em todos os pixels fora dos
+    polígonos de `gdf` cuja `situacao_col` seja igual a `grupo_val`.
+
+    Usado por `interpolate_consciente_sit` pra restringir o buffer da
+    interpolação a pixels de contexto compatível (urbano amostra urbano,
+    rural amostra rural).
+    """
+    from rasterio.features import rasterize
+    with rasterio.open(lst_tif) as src:
+        arr = src.read(1).astype("float64")
+        if src.nodata is not None:
+            arr[arr == src.nodata] = np.nan
+        transform = src.transform
+        raster_crs = src.crs
+    gdf_r = gdf.to_crs(raster_crs) if gdf.crs != raster_crs else gdf
+    shapes = (
+        (geom, 1) for geom, s in zip(gdf_r.geometry, gdf_r[situacao_col])
+        if str(s) == str(grupo_val)
+    )
+    mask = rasterize(shapes, out_shape=arr.shape, transform=transform,
+                     fill=0, dtype="uint8")
+    for v in NODATA:
+        arr[arr == v] = np.nan
+    arr[mask == 0] = np.nan
+    return arr, transform
+
+
+def interpolate_consciente_sit(gdf, ok_mask, rasters, buffer_m, min_cobertura,
+                               lst_px, px_area, min_pixels=50,
+                               situacao_col="SITUACAO"):
+    """Interpolação por buffer onde o LST amostrado é restrito a pixels da
+    mesma SITUACAO do setor-alvo (urbano amostra urbano; rural amostra rural).
+
+    Resolve o problema identificado na Fase 3.3 (QA): o buffer de 3,5 km em
+    setor urbano típico de RB puxa muitos pixels menos quentes de vegetação
+    ao redor, enviesando a temperatura estimada pra baixo.
+
+    Faz um passe por grupo distinto de SITUACAO, mascarando o LST na grade
+    nativa, e usa `interpolate_by_buffer` por baixo. NDVI, perda e NDVI base
+    seguem com raster original (não mascarado por contexto); isso vai ser
+    iteração futura se necessário.
+    """
+    out = gdf.copy()
+    out["interpolado"] = False
+    ok_arr = np.asarray(ok_mask)
+    situ = gdf[situacao_col].astype(str).to_numpy()
+    for grupo in np.unique(situ):
+        is_grp = situ == grupo
+        needy_this = (~ok_arr) & is_grp
+        if not needy_this.any():
+            continue
+        lst_arr, lst_tr = _mask_lst_by_situacao(
+            rasters["lst"], gdf, grupo, situacao_col)
+        rasters_g = dict(rasters)
+        rasters_g["lst"] = (lst_arr, lst_tr)
+        ok_g = ~needy_this
+        step = interpolate_by_buffer(gdf, ok_g, rasters_g, buffer_m,
+                                     min_cobertura, lst_px, px_area,
+                                     min_pixels=min_pixels)
+        got = step["interpolado"].to_numpy()
+        n = int(got.sum())
+        if n == 0:
+            continue
+        print(f"[consciente/{grupo}] {n} setor(es) interpolado(s) com LST "
+              f"restrito a pixels '{grupo}'")
+        for col in ("lst_mean", "lst_percentile_90", "ndvi_atual_mean",
+                    "ndvi_delta", "perda_pct"):
+            if col in step.columns:
+                out.loc[got, col] = step.loc[got, col]
+        out.loc[got, "interpolado"] = True
+    return out
+
+
 def join_bairro_osm(gdf, bairros_path, max_m=3000, epsg_metrico=31979):
     """Atribui `bairro` a cada unidade pelo ponto OSM mais próximo (nearest-neighbor).
 
@@ -234,6 +312,9 @@ def main():
                     help="raio (m) do buffer usado pra amostrar pixels dos setores cinzas")
     ap.add_argument("--min-pixels-interp", type=int, default=50,
                     help="mínimo de pixels LST válidos no buffer para aceitar a interpolação")
+    ap.add_argument("--interpolacao-ingenua", action="store_true",
+                    help="desliga a interpolação consciente de SITUACAO (urb/rural) "
+                         "e volta à versão da Fase 1 (buffer mistura todos os contextos)")
     ap.add_argument("--bairros-gpkg", default="data/bairros_rb.gpkg",
                     help="camada de pontos de bairro OSM (ver scripts/fetch_bairros_osm.py)")
     ap.add_argument("--bairro-max-m", type=float, default=3000,
@@ -289,14 +370,23 @@ def main():
     if not args.sem_interpolar:
         rasters = {"lst": lst_tif, "ndvi_now": ndvi_now_tif,
                    "ndvi_base": ndvi_base_tif, "loss": loss_tif}
-        gdf = interpolate_by_buffer(gdf, ok, rasters,
-                                    buffer_m=args.buffer_interp,
-                                    min_cobertura=args.min_cobertura,
-                                    lst_px=lst_px, px_area=px_area,
-                                    min_pixels=args.min_pixels_interp)
+        if args.interpolacao_ingenua or "SITUACAO" not in gdf.columns:
+            gdf = interpolate_by_buffer(gdf, ok, rasters,
+                                        buffer_m=args.buffer_interp,
+                                        min_cobertura=args.min_cobertura,
+                                        lst_px=lst_px, px_area=px_area,
+                                        min_pixels=args.min_pixels_interp)
+            modo = "ingênua"
+        else:
+            gdf = interpolate_consciente_sit(gdf, ok, rasters,
+                                             buffer_m=args.buffer_interp,
+                                             min_cobertura=args.min_cobertura,
+                                             lst_px=lst_px, px_area=px_area,
+                                             min_pixels=args.min_pixels_interp)
+            modo = "consciente de SITUACAO"
         gdf["anomalia_calor"] = gdf["lst_mean"] - lst_mean
         n_interp = int(gdf["interpolado"].sum())
-        print(f"interpoladas: {n_interp} unidades (buffer {args.buffer_interp:.0f} m)")
+        print(f"interpoladas: {n_interp} unidades (buffer {args.buffer_interp:.0f} m, {modo})")
         ok = ok | gdf["interpolado"]
     g = gdf[ok].copy()
     falta_verde = 1 - minmax(g["ndvi_atual_mean"])
