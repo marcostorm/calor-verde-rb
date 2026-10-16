@@ -92,6 +92,31 @@ Depois abra `http://localhost:8787/viewer.html` no navegador. Para parar o serve
 
 O visualizador carrega sozinho os três resumos, as duas versões do choropleth e os POIs. Switch de versão (rádio no topo do painel direito) recarrega sem precisar reload da página.
 
+## Atualizar dependências
+
+As versões em `requirements.txt` estão pinadas. Para atualizar com segurança:
+
+```bash
+# 1. Backup do snapshot atual (comparar depois)
+cp -r data/out /tmp/out_before_upgrade
+
+# 2. Testar nova versão em ambiente isolado
+python3 -m venv .venv-test
+.venv-test/bin/pip install -r requirements.txt
+.venv-test/bin/pip install --upgrade geopandas  # ou lib específica
+.venv-test/bin/pip freeze > requirements.new.txt
+
+# 3. Rodar pipeline com venv de teste
+.venv-test/bin/python analyze.py --unidades data/setores_rb.gpkg --min-cobertura 0.5 --sem-pois
+
+# 4. Comparar saídas (QA deve passar, compare_runs sem surpresas)
+.venv-test/bin/python scripts/compare_runs.py /tmp/out_before_upgrade data/out
+
+# 5. Se OK, promover: substituir requirements.txt pela .new.txt e commitar
+```
+
+Nunca atualize libs em produção sem rodar o compare_runs — mudanças de rasterio ou rasterstats podem alterar sutilmente a leitura de nodata e distorcer resultados em silêncio.
+
 ## Comparar duas rodadas (`scripts/compare_runs.py`)
 
 Diff estruturado entre dois diretórios de output.

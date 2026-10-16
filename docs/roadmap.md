@@ -35,9 +35,9 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
    - contagem de interpolados que viraram originais (ou vice-versa)
    - Filtra ruído: só reporta saltos com |Δ| ≥ 0,5
 
-1.3 **Pin de versões** em `requirements.txt`:
-   - Trocar `geopandas>=0.14` por versões fixas (`==`) das 5 libs principais
-   - Documentar em operacao.md como atualizar com segurança
+✅ 1.3 **Pin de versões** em `requirements.txt` (feito em 2026-10-15):
+   - Todas as 7 libs com `==` (earthengine-api 1.7.46, geopandas 1.2.0, rasterio 1.5.2, rasterstats 0.21.0, numpy 2.5.3, pandas 3.0.6, requests 2.34.2)
+   - operacao.md ganhou seção "Atualizar dependências" com fluxo seguro (venv teste → pipeline → compare_runs → promover)
 
 **Esforço:** 1-2 sessões. **Dependência:** nenhuma.
 
