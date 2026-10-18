@@ -520,10 +520,10 @@ def _run_pipeline(args, writer, recorder=None):
     recorder = recorder or _NullRecorder()
 
     with recorder.stage("load_rasters"):
-        lst_tif = find("lst_*.tif")
+        lst_tif = find(f"lst_{C.YEAR_NOW}.tif")
         ndvi_now_tif = find(f"ndvi_{C.YEAR_NOW}.tif")
         ndvi_base_tif = find(f"ndvi_{C.YEAR_BASE}.tif")
-        loss_tif = find("perda_*.tif")
+        loss_tif = find(f"perda_{C.YEAR_BASE}_{C.YEAR_NOW}.tif")
 
         with rasterio.open(loss_tif) as src:
             crs = src.crs

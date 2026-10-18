@@ -1,0 +1,39 @@
+{
+  "ano_atual": 2025,
+  "ano_base": 2019,
+  "lst_media_cidade": 33.45,
+  "lst_p75_cidade": 35.29,
+  "perda_total_ha": 1572.3,
+  "top5_prioridade": [
+    {
+      "nome": "120040105000314",
+      "bairro": "Vila da Amizade",
+      "indice_prioridade": 73.9,
+      "lst_mean": 42.56
+    },
+    {
+      "nome": "120040105000099",
+      "bairro": "João Eduardo I",
+      "indice_prioridade": 69.43,
+      "lst_mean": 42.68
+    },
+    {
+      "nome": "120040105000109",
+      "bairro": "Jardim Manoel Julião",
+      "indice_prioridade": 67.91,
+      "lst_mean": 37.43
+    },
+    {
+      "nome": "120040105000386",
+      "bairro": "LBA Vila Betel II",
+      "indice_prioridade": 67.13,
+      "lst_mean": 40.67
+    },
+    {
+      "nome": "120040105000062",
+      "bairro": "Aeroporto Velho",
+      "indice_prioridade": 65.89,
+      "lst_mean": 40.66
+    }
+  ]
+}

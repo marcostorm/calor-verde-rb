@@ -11,8 +11,9 @@ CRS = "EPSG:31979"
 
 # Estação seca (menos nuvens na Amazônia): junho a setembro
 DRY_MONTHS = (6, 9)
-YEAR_NOW = 2026
-YEAR_BASE = 2019  # Sentinel-2 L2A tem boa cobertura no Brasil a partir de 2019
+YEAR_NOW = int(os.environ.get("CALOR_VERDE_YEAR_NOW", 2026))
+YEAR_BASE = int(os.environ.get("CALOR_VERDE_YEAR_BASE", 2019))
+# Sentinel-2 L2A tem boa cobertura no Brasil a partir de 2019
 
 # Critério de perda de vegetação: era verde (NDVI >= base_min) e caiu pelo menos |delta|
 NDVI_LOSS_BASE_MIN = 0.5
