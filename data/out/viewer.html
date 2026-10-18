@@ -240,6 +240,7 @@ function colorLST(v){
 }
 const COLOR_FNS = { prioridade: colorPri, lst: colorLST };
 const COLOR_PROP = { prioridade: 'indice_prioridade', lst: 'lst_mean' };
+const THERMO = '<svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>';
 const LEGEND_SPECS = {
   prioridade: {
     title: 'Prioridade de plantio',
@@ -271,7 +272,6 @@ const NIVEL_COLOR = v => v==null ? 'var(--border-strong)'
   : v>=25 ? 'var(--nivel-media)'
   : 'var(--nivel-baixa)';
 const fmtNum = (n, d=1) => n==null ? '—' : Number(n).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
-const THERMO = '<svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>';
 
 function pop(f){
   const p = f.properties;
