@@ -5,6 +5,7 @@
 <title>O método — Calor &amp; Verde Rio Branco</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Como o estudo Calor &amp; Verde identifica onde plantar árvores primeiro em Rio Branco. Metodologia resumida pra gestão pública e jornalismo.">
+<link rel="icon" type="image/svg+xml" href="img/leaf.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
@@ -25,6 +26,10 @@
     --hot:#b10026;
   }
   html,body{margin:0;background:var(--bg-page);color:var(--text);font-family:var(--sans);line-height:1.6}
+  body{position:relative}
+  body::before{content:'';position:fixed;inset:0;background:url('img/leaf.svg') repeat;background-size:70px;mix-blend-mode:multiply;opacity:.10;pointer-events:none;z-index:0}
+  body > *{position:relative;z-index:1}
+  h1 .brand-leaf{width:32px;height:32px;vertical-align:-7px;margin-right:12px}
   .page{max-width:720px;margin:0 auto;padding:48px 24px 96px}
   header{margin-bottom:40px}
   header .back{color:var(--accent);font-size:13px;text-decoration:none;border-bottom:1px solid var(--border-strong);padding-bottom:1px}
@@ -70,7 +75,7 @@
 <div class="page">
 <header>
   <a href="./" class="back">← Voltar ao mapa</a>
-  <h1>O método em uma página</h1>
+  <h1><img class="brand-leaf" src="img/leaf.svg" alt="">O método em uma página</h1>
   <p class="lede">Como o estudo <em>Calor &amp; Verde</em> identifica onde Rio Branco deveria plantar árvores primeiro — e por quê a resposta não é "o lugar mais quente".</p>
 </header>
 

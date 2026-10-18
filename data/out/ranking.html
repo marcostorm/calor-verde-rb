@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Ranking de setores — Calor & Verde Rio Branco</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="img/leaf.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
@@ -27,6 +28,10 @@
     --nivel-critica:#b10026;
   }
   html,body{margin:0;font-family:var(--sans);color:var(--text);background:var(--bg-page);font-size:14px;line-height:1.5}
+  body{position:relative}
+  body::before{content:'';position:fixed;inset:0;background:url('img/leaf.svg') repeat;background-size:70px;mix-blend-mode:multiply;opacity:.10;pointer-events:none;z-index:0}
+  body > *{position:relative;z-index:1}
+  h1 .brand-leaf{width:30px;height:30px;vertical-align:-7px;margin-right:10px}
   .wrap{max-width:1200px;margin:0 auto;padding:28px 24px 48px}
   h1{font-family:var(--serif);font-size:30px;font-weight:700;letter-spacing:-.01em;margin:0 0 4px;line-height:1.15}
   .sub{color:var(--text-muted);margin-bottom:16px;max-width:68ch}
@@ -78,7 +83,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Ranking de setores — Rio Branco</h1>
+  <h1><img class="brand-leaf" src="img/leaf.svg" alt="">Ranking de setores — Rio Branco</h1>
   <p class="sub">Lista completa dos setores censitários do IBGE, ordenados pela fila de plantio. Clique numa linha para ver todos os dados; clique no cabeçalho de uma coluna para ordenar.</p>
   <nav class="nav">
     <a href="viewer.html">Ver no mapa</a>

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Calor & Verde — Rio Branco</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="img/leaf.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
@@ -31,6 +32,10 @@
   #map{position:absolute;inset:0 380px 0 0;background:#e5ebdc}
   .leaflet-tile-pane{filter:grayscale(.65) brightness(1.08) contrast(.92)}
   #side{position:absolute;top:0;right:0;bottom:0;width:380px;overflow:auto;padding:20px 18px;background:var(--bg-page);border-left:1px solid var(--border-soft);box-sizing:border-box;font-size:14px;line-height:1.45}
+  #side::before{content:'';position:absolute;inset:0;background:url('img/leaf.svg') repeat;background-size:70px;mix-blend-mode:multiply;opacity:.10;pointer-events:none;z-index:0}
+  body.exporting #side::before{display:none}
+  #side > *{position:relative;z-index:1}
+  h1 .brand-leaf{width:28px;height:28px;vertical-align:-6px;margin-right:8px}
   h1{font-family:var(--serif);font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px;line-height:1.15}
   h2{font-family:var(--serif);font-size:15px;font-weight:600;margin:20px 0 8px;letter-spacing:.005em;color:var(--text)}
   .sub{color:var(--text-muted);font-size:12.5px;margin-bottom:16px;line-height:1.5}
@@ -133,7 +138,7 @@
 <body>
 <div id="map"></div>
 <aside id="side">
-  <h1>Calor &amp; Verde — Rio Branco</h1>
+  <h1><img class="brand-leaf" src="img/leaf.svg" alt="">Calor &amp; Verde — Rio Branco</h1>
   <div class="sub">Onde a cidade mais precisa de árvore. Em cada setor censitário do IBGE, medimos quanto o chão esquenta (satélite Landsat 8/9) e quanta vegetação sobra (Sentinel-2) na estação seca.</div>
 
   <div class="print-header">
@@ -605,20 +610,24 @@ document.getElementById('btn-png').onclick = async () => {
       });
     }
     document.getElementById('print-ver').textContent = VER_LABEL[currentVer] || currentVer;
+    document.getElementById('side').scrollTop = 0;
     document.body.classList.add('exporting');
     // Yield pro layout aplicar `.exporting` antes do snapshot
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     const url = await window.modernScreenshot.domToPng(document.body, {
-      scale: 2, backgroundColor: '#eef2eb',
+      scale: 1.5, backgroundColor: '#eef2eb',
       width: window.innerWidth, height: window.innerHeight,
     });
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0,10);
     a.href = url;
     a.download = `calor-verde-rb_${currentVer}_${stamp}.png`;
+    document.body.appendChild(a);
     a.click();
+    a.remove();
   } catch (e) {
-    alert('Erro gerando PNG: ' + e.message + '\nTente "Baixar PDF" ou use o screenshot do sistema.');
+    console.error('[btn-png]', e);
+    alert('Erro gerando PNG: ' + (e.message || e) + '\nTente "Baixar PDF" ou use o screenshot do sistema.');
   } finally {
     document.body.classList.remove('exporting');
     btn.textContent = orig; btn.disabled = false;
