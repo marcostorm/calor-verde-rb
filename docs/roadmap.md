@@ -152,6 +152,89 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 
 ---
 
+## Fase 8: Automação mensal + histórico + relatório anual
+
+**Problema:** hoje toda rodada é manual (`extract_gee.py` → `analyze.py` → `scripts/relatorio.py`). Sem cadência, o projeto depende de disciplina humana e não gera série temporal rica (hoje só 2025 e 2026 pontuais, não 12 meses de granularidade).
+
+**Entregáveis:**
+
+8.1 **GitHub Actions mensal:**
+   - Cron no dia 5 de cada mês roda `extract_gee.py` + `analyze.py` + `scripts/relatorio.py`
+   - Precisa resolver autenticação GEE em CI: service account dedicada (scope só Earth Engine), JSON em `GitHub Secrets`, nunca no repo
+   - Commita snapshot em `snapshots/YYYY-MM/` e PDF em `relatorios/calor-verde-rb_YYYY-MM-05.pdf`
+   - Trigger `workflow_dispatch` pra rodar manual quando necessário
+
+8.2 **Snapshot mensal:**
+   - Convenção `snapshots/YYYY-MM/` (12 por ano) além do `snapshots/YYYY/` anual atual
+   - `trends.py` passa a varrer mensais além dos anuais (regex `^\d{4}(-\d{2})?$`)
+   - Permite responder "qual mês foi mais quente de 2026?" com dado
+
+8.3 **Relatório anual compilado** (`scripts/relatorio_anual.py`):
+   - Varre `snapshots/YYYY-MM/` de um ano, agrega e emite PDF de 12-15 páginas
+   - Nova seção "evolução mensal" com gráfico temporal + mapa de aquecimento acumulado
+   - Comparação ano-vs-ano se houver ≥2 anos (ex: 2026 vs 2025 lado a lado)
+   - Rodado 1x por ano em dezembro, commitado em `relatorios/anuais/`
+
+**Esforço:** 2-3 sessões. **Dependência:** Fase 4.4 (PDF) e Fase 5.3 parcial (trends). **Riscos:** cota GEE (precisa monitorar), credencial vazar (precisa service account dedicada).
+
+---
+
+## Fase 9: Multi-cidade via CLI
+
+**Problema:** projeto hoje é hardcoded pra Rio Branco (`AOI_BBOX`, código IBGE `1200401`, arquivos `_rb`). Pra escalar pra outra capital amazônica (Manaus, Belém, Porto Velho, Macapá) precisa editar código.
+
+**Decisão de design já tomada**: **CLI, não página de configurações**. Página de config exige backend, auth, DB e vira SaaS — complexidade que só se paga com demanda recorrente comprovada. Documentação + CLI resolve o 80% do caso sem adicionar superfície de ataque.
+
+**Entregáveis:**
+
+9.1 **Config por cidade** em `cidades/<slug>.yaml`:
+   - Campos: `nome`, `uf`, `codigo_ibge_municipio`, `bbox` (opcional, derivado do shape se omisso)
+   - Default: `rio-branco.yaml` com config atual
+
+9.2 **`scripts/setup_cidade.py --cidade <slug>`**:
+   - Baixa setores IBGE 2022 filtrados por código do município
+   - Query Overpass OSM pra bairros + POIs no bbox do município
+   - Filtra `br_setores_entorno_cd2022.csv` pelo prefixo do código IBGE pra arborização
+   - Gera `data/<slug>/{setores,bairros}.gpkg` + `data/<slug>/{arborizacao,focos}.csv`
+
+9.3 **`analyze.py` + `relatorio.py` ficam agnósticos**:
+   - Nova flag `--cidade <slug>` que lê `cidades/<slug>.yaml` e aponta pros arquivos derivados
+   - Outputs em `data/out/<slug>/` em vez de `data/out/`
+   - Pages serve `/cidades/<slug>/viewer.html` + `/cidades/<slug>/ranking.html`
+
+9.4 **Index de cidades** em `/index.html` da home: lista as cidades disponíveis com link direto pro viewer de cada uma.
+
+**Esforço:** 4-6 sessões. **Dependência:** Fase 8 (automação mensal) rodando pra RB sem bug por ≥3 meses. **Risco:** fazer antes de validar é otimização prematura — multi-cidade sem automação mensal multiplica trabalho manual.
+
+---
+
+## Fase 10: Artigo acadêmico (ideia parqueada)
+
+**Contexto:** ideia de publicar artigo com narrativa "IA pra mitigar impactos ambientais urbanos". **Red flag honesto**: o projeto hoje NÃO usa IA. Usa sensoriamento remoto + estatística zonal + composição ponderada. Chamar de IA num artigo acadêmico é alvo fácil pra revisor rejeitar.
+
+**Dois caminhos possíveis:**
+
+10.A **Artigo honesto sobre a metodologia atual**: "Diagnóstico por sensoriamento remoto da desigualdade térmica urbana em Rio Branco, AC" ou "Priorização de arborização urbana via composição de índices satelitais". Público: revistas de geografia/urbanismo (Ambiente & Sociedade, RBEUR, Saúde e Sociedade). Trabalho válido, publicável sem IA.
+
+10.B **Adicionar IA de verdade primeiro**: segmentação de telhado via U-Net nas imagens de alta-resolução, modelo preditivo de LST via XGBoost, ou classificação de uso do solo. Vira projeto novo de meses. Aí o título "IA pra mitigar impactos" cola.
+
+**Status**: parqueado. Decidir depois de 12 meses de automação mensal (Fase 8) rodando — aí há dado longitudinal real pra publicação.
+
+---
+
+## Decisões legais e comerciais (fora do escopo técnico)
+
+Pendências que precisam de advogado/contador especializado, não entram no roadmap técnico:
+
+- **Adicionar `LICENSE` ao repo** (hoje sem licença explícita, direitos ambíguos). Sugestões a avaliar: MIT (permissivo), AGPL (share-alike), ou dual-licensing AGPL + proprietária. Decisão depende do modelo de monetização pretendido.
+- **Enquadramento tributário**: Storm Lab é MEI, teto ~R$ 81k/ano em serviços. Projeto formal pra prefeitura pode exigir migração pra ME/LTDA.
+- **Modelo de venda** (consultoria pontual vs. SaaS vs. edital): precisa termo de referência e contador antes de precificar.
+- **LGPD**: nada hoje (zero dado pessoal coletado). Reavaliar se virar SaaS com login.
+
+**Essas decisões não bloqueiam o trabalho técnico — podem ser resolvidas em paralelo quando houver interesse comercial concreto.**
+
+---
+
 ## Priorização sugerida
 
 ### Caminho recomendado (ordem)
@@ -169,6 +252,12 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 - **"Quero publicar logo":** 1 → 2 → 4 → 5.1
 - **"Quero cientificamente defensável":** 1 → 3 → 6 → 7
 - **"Quero histórico multi-ano":** 1 → 5 → 2 → 3
+
+### Pendentes depois das fases 1–7
+
+- **Fase 8** (automação mensal) é a próxima entregável: resolve 6.4 + relatório mensal + anual compilado
+- **Fase 9** (multi-cidade) só depois de 12 meses de 8 rodando sem bug
+- **Fase 10** (artigo acadêmico) parqueada; decidir conforme interesse e dado longitudinal disponível
 
 ### O que não entra no roadmap (por decisão)
 
