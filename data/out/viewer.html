@@ -6,29 +6,29 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   :root{
-    --serif:'Fraunces',ui-serif,Georgia,'Times New Roman',serif;
-    --sans:'Inter',system-ui,-apple-system,sans-serif;
-    --bg-page:#fdf6ec;
-    --bg-card:#faf1dc;
-    --bg-strong:#f3e5c8;
-    --border-soft:#e8dcc5;
-    --border-strong:#d4a373;
-    --text:#2a2420;
-    --text-muted:#6b5e52;
-    --text-faint:#9c8c7a;
-    --accent:#8b4513;
-    --accent-soft:#b56a3a;
+    --serif:'Lora',ui-serif,Georgia,'Times New Roman',serif;
+    --sans:'Nunito Sans',system-ui,-apple-system,sans-serif;
+    --bg-page:#eef2eb;
+    --bg-card:#e3ead8;
+    --bg-strong:#d4ddc6;
+    --border-soft:#c4cfb0;
+    --border-strong:#a8b593;
+    --text:#1a2621;
+    --text-muted:#5a6b63;
+    --text-faint:#889590;
+    --accent:#2d5a3d;
+    --accent-soft:#6b8e5a;
   }
   html,body{margin:0;height:100%;font-family:var(--sans);color:var(--text);background:var(--bg-page)}
-  #map{position:absolute;inset:0 380px 0 0;background:#efe8da}
+  #map{position:absolute;inset:0 380px 0 0;background:#e5ebdc}
   .leaflet-tile-pane{filter:grayscale(.65) brightness(1.08) contrast(.92)}
   #side{position:absolute;top:0;right:0;bottom:0;width:380px;overflow:auto;padding:20px 18px;background:var(--bg-page);border-left:1px solid var(--border-soft);box-sizing:border-box;font-size:14px;line-height:1.45}
-  h1{font-family:var(--serif);font-size:26px;font-weight:700;font-variation-settings:"opsz" 48;letter-spacing:-.01em;margin:0 0 2px;line-height:1.1}
-  h2{font-family:var(--serif);font-size:15px;font-weight:600;font-variation-settings:"opsz" 14;margin:20px 0 8px;letter-spacing:.01em;color:var(--text)}
+  h1{font-family:var(--serif);font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px;line-height:1.15}
+  h2{font-family:var(--serif);font-size:15px;font-weight:600;margin:20px 0 8px;letter-spacing:.005em;color:var(--text)}
   .sub{color:var(--text-muted);font-size:12.5px;margin-bottom:16px;line-height:1.5}
   .kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px dashed var(--border-soft);font-size:13px}
   .kv .k{cursor:help;border-bottom:1px dotted var(--text-faint);color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -516,7 +516,7 @@ document.getElementById('btn-png').onclick = async () => {
     // Yield pro layout aplicar `.exporting` antes do snapshot
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     const url = await window.modernScreenshot.domToPng(document.getElementById('side'), {
-      scale: 2, backgroundColor: '#fdf6ec',
+      scale: 2, backgroundColor: '#eef2eb',
     });
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0,10);
