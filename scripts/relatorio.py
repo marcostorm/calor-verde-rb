@@ -297,7 +297,7 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
 
     stats_sumario = []
     stats_sumario.append((fmt_num(lst_media) + "°C", f"temperatura média do chão em {C.YEAR_NOW} na estação seca; medida pelo Landsat 8/9"))
-    stats_sumario.append((perda_ha_fmt + " ha", f"de vegetação perdida entre {C.YEAR_BASE} e {C.YEAR_NOW} &mdash; equivalente a cerca de <b>{campos_fmt} campos de futebol</b> (padrão FIFA 105×68 m)"))
+    stats_sumario.append((perda_ha_fmt + " ha", f"de vegetação perdida entre {C.YEAR_BASE} e {C.YEAR_NOW}, equivalente a cerca de <b style='white-space:nowrap'>{campos_fmt}&nbsp;campos&nbsp;de&nbsp;futebol</b> (padrão FIFA 105×68 m)"))
     stats_sumario.append((f"{n_rank}", f"setores censitários com dado confiável; {n_total - n_rank} descartados por nuvem persistente"))
     if tem_tendencia:
         stats_sumario.append((f"+{fmt_num(delta_medio)}°C", f"aquecimento médio em um ano ({quente_pct}% dos setores esquentaram)"))
