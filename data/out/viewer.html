@@ -73,26 +73,29 @@
   .poi-bar-fill{height:100%;border-radius:3px;transition:width .3s ease}
   .thermo{display:inline-block;vertical-align:-0.1em;margin-right:3px;color:var(--nivel-alta);opacity:.85}
   .sp-popup .leaflet-popup-content-wrapper{border-radius:8px;padding:0;box-shadow:0 6px 20px rgba(26,38,33,.18);border:1px solid var(--border-soft)}
-  .sp-popup .leaflet-popup-content{margin:0;padding:14px 16px 12px;width:260px!important;font-family:var(--sans);font-size:12.5px;line-height:1.4;color:var(--text)}
+  .sp-popup .leaflet-popup-content{margin:0;padding:16px 18px 14px;width:260px!important;font-family:var(--sans);font-size:12.5px;line-height:1.4;color:var(--text)}
   .sp-popup .leaflet-popup-tip{box-shadow:0 6px 20px rgba(26,38,33,.18)}
-  .sp-title{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
-  .sp-nome{font-family:var(--serif);font-weight:600;font-size:14px;line-height:1.25;color:var(--text);padding-right:14px}
-  .sp-chip{flex-shrink:0;background:var(--bg-strong);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;letter-spacing:.01em}
-  .sp-chip-out{background:#efe9df;color:var(--text-muted);font-weight:500;font-style:italic}
+  .sp-popup .leaflet-popup-close-button{font-size:22px!important;width:28px!important;height:28px!important;padding:4px 0 0 0!important;line-height:1!important;color:var(--text-muted)!important;font-weight:400!important;top:4px!important;right:6px!important}
+  .sp-popup .leaflet-popup-close-button:hover{color:var(--text)!important;background:transparent!important}
+  .sp-title{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin:0 0 12px;padding:0 24px 10px 0;border-bottom:1px solid var(--border-soft)}
+  .sp-nome{font-family:var(--serif);font-weight:700;font-size:17px;line-height:1.2;color:var(--text);letter-spacing:-.005em}
+  .sp-chip{flex-shrink:0;background:var(--bg-strong);color:var(--accent);font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+  .sp-chip-out{background:#efe9df;color:var(--text-muted);font-weight:600;font-style:normal}
   .sp-headline{display:flex;align-items:baseline;gap:10px}
   .sp-pri-num{font-family:var(--serif);font-weight:600;font-size:28px;line-height:1;color:var(--text);font-variant-numeric:tabular-nums}
   .sp-pri-max{font-size:13px;color:var(--text-faint);font-weight:400;margin-left:1px}
-  .sp-pri-label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em}
-  .sp-pri-label b{font-weight:700;letter-spacing:0;text-transform:none;font-size:12px}
+  .sp-pri-label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+  .sp-pri-label b{font-weight:700;color:var(--text);font-size:11px}
   .sp-pri-bar{height:4px;background:var(--bg-strong);border-radius:2px;overflow:hidden;margin:5px 0 12px}
   .sp-pri-fill{height:100%;border-radius:2px}
-  .sp-grid{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;margin:0;padding:10px 0 0;border-top:1px solid var(--border-soft)}
+  .sp-grid{display:grid;grid-template-columns:auto 1fr;gap:9px 12px;margin:0;padding:10px 0 0;border-top:1px solid var(--border-soft)}
   .sp-grid dt{color:var(--text-muted);font-weight:400;font-size:12px;align-self:center;white-space:nowrap}
-  .sp-grid dd{margin:0;color:var(--text);font-weight:600;font-size:12.5px;font-variant-numeric:tabular-nums;text-align:right;align-self:center;line-height:1.3}
-  .sp-pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:500;margin-left:4px;font-variant-numeric:tabular-nums;letter-spacing:0;vertical-align:1px}
+  .sp-grid dd{margin:0;color:var(--text);font-weight:600;font-size:12.5px;font-variant-numeric:tabular-nums;line-height:1.3;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .sp-pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:0}
   .sp-pill-bad{background:#fadcd3;color:#a02a19}
   .sp-pill-good{background:#dceadb;color:#2d5a3d}
-  .sp-pill-muted{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:500;margin-left:4px;background:#eae5d8;color:var(--text-muted);vertical-align:1px}
+  .sp-pill-muted{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:500;background:#eae5d8;color:var(--text-muted)}
+  .sp-val{display:inline-flex;align-items:baseline;gap:3px;white-space:nowrap}
   .sp-interp{margin:8px 0 0;font-size:10.5px;color:#b8860b;font-style:italic;text-align:right}
   a{color:var(--accent)}
   .export{display:flex;gap:8px;align-items:center;margin:12px 0 16px}
@@ -328,13 +331,13 @@ function pop(f){
     : '';
 
   const rows = [];
-  rows.push(`<dt>Temperatura do chão</dt><dd>${THERMO}${fmtNum(p.lst_mean)} °C ${anomPill}</dd>`);
-  rows.push(`<dt>Vegetação (índice)</dt><dd>${fmtNum(p.ndvi_atual_mean, 2)} ${ndviPill}</dd>`);
-  rows.push(`<dt>Vegetação perdida</dt><dd>${fmtNum(p.perda_ha, 2)} ha ${perdaPill}</dd>`);
+  rows.push(`<dt>Temperatura do chão</dt><dd><span class="sp-val">${THERMO}${fmtNum(p.lst_mean)} °C</span>${anomPill}</dd>`);
+  rows.push(`<dt>Vegetação (índice)</dt><dd><span class="sp-val">${fmtNum(p.ndvi_atual_mean, 2)}</span>${ndviPill}</dd>`);
+  rows.push(`<dt>Vegetação perdida</dt><dd><span class="sp-val">${fmtNum(p.perda_ha, 2)} ha</span>${perdaPill}</dd>`);
   if(p.pct_arborizacao != null){
-    rows.push(`<dt>Arborização na calçada</dt><dd>${fmtNum(p.pct_arborizacao, 0)}% <span class="sp-pill-muted">IBGE 2022</span></dd>`);
+    rows.push(`<dt>Arborização na calçada</dt><dd><span class="sp-val">${fmtNum(p.pct_arborizacao, 0)}%</span><span class="sp-pill-muted">IBGE 2022</span></dd>`);
   }
-  rows.push(`<dt>Confiança do dado</dt><dd>${((p.cobertura_calor||0)*100).toFixed(0)}%</dd>`);
+  rows.push(`<dt>Confiança do dado</dt><dd><span class="sp-val">${((p.cobertura_calor||0)*100).toFixed(0)}%</span></dd>`);
 
   const interp = p.interpolado ? '<div class="sp-interp">valor estimado por buffer</div>' : '';
 
