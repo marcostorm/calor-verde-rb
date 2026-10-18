@@ -1,0 +1,129 @@
+name: Rodada mensal
+
+# Dia 5 de cada mês, 10h UTC (= 7h BRT, horário de pouco tráfego Overpass).
+# workflow_dispatch permite trigger manual pelo painel do GitHub.
+on:
+  schedule:
+    - cron: '0 10 5 * *'
+  workflow_dispatch:
+    inputs:
+      skip_extract:
+        description: 'Pular extract_gee.py (reusa TIFs commitados)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rodada-mensal
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # token com permissão de push (actions bot)
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Set month variable (YYYY-MM, UTC)
+        id: date
+        run: |
+          echo "yyyymm=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+          echo "yyyymmdd=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: System deps (Pango/Cairo pra WeasyPrint + GDAL pra rasterio)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpango-1.0-0 libpangoft2-1.0-0 \
+            libharfbuzz0b libjpeg62 \
+            gdal-bin libgdal-dev
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Extract GEE (Landsat + Sentinel-2 + perda)
+        if: ${{ inputs.skip_extract != true }}
+        env:
+          GEE_PROJECT: ${{ secrets.GEE_PROJECT }}
+          GEE_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.GEE_SERVICE_ACCOUNT_KEY_JSON }}
+        run: python extract_gee.py
+
+      - name: Fetch focos INPE (período atual, estação seca)
+        continue-on-error: true  # INPE pode estar fora do ar; não bloqueia rodada
+        run: python scripts/fetch_focos_inpe.py
+
+      - name: Analyze (versão conservadora)
+        run: |
+          python analyze.py \
+            --unidades data/setores_rb.gpkg \
+            --min-cobertura 0.5 \
+            --arborizacao data/arborizacao_rb.csv \
+            $([ -f data/focos_rb.csv ] && echo "--focos data/focos_rb.csv")
+          cp data/out/ranking.csv data/out/ranking_conservador.csv
+          cp data/out/unidades_prioridade.geojson data/out/unidades_prioridade_conservador.geojson
+          cp data/out/resumo.json data/out/resumo_conservador.json
+
+      - name: Analyze (versão ampla)
+        run: |
+          python analyze.py \
+            --unidades data/setores_rb.gpkg \
+            --min-cobertura 0.2 \
+            --arborizacao data/arborizacao_rb.csv \
+            $([ -f data/focos_rb.csv ] && echo "--focos data/focos_rb.csv") > /dev/null
+          cp data/out/ranking.csv data/out/ranking_amplo.csv
+          cp data/out/unidades_prioridade.geojson data/out/unidades_prioridade_amplo.geojson
+          cp data/out/resumo.json data/out/resumo_amplo.json
+          # restaura main out como conservador
+          cp data/out/ranking_conservador.csv data/out/ranking.csv
+          cp data/out/resumo_conservador.json data/out/resumo.json
+          cp data/out/unidades_prioridade_conservador.geojson data/out/unidades_prioridade.geojson
+
+      - name: Snapshot mensal
+        run: |
+          mkdir -p snapshots/${{ steps.date.outputs.yyyymm }}
+          cp data/out/ranking.csv \
+             data/out/resumo.json \
+             data/out/unidades_prioridade.geojson \
+             snapshots/${{ steps.date.outputs.yyyymm }}/
+          cat > snapshots/${{ steps.date.outputs.yyyymm }}/README.md << 'EOF'
+          # Snapshot mensal (gerado pelo workflow mensal)
+
+          Rodada automática do pipeline em ${{ steps.date.outputs.yyyymmdd }} UTC.
+          Versão conservadora (`--min-cobertura 0.5`).
+
+          Pra reproduzir manualmente: ver `docs/operacao.md`.
+          EOF
+
+      - name: Trends (anual + mensal)
+        run: |
+          python scripts/trends.py --granularidade annual
+          python scripts/trends.py --granularidade monthly --out data/out/trends/mensal || true
+
+      - name: Relatório PDF
+        run: python scripts/relatorio.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add snapshots/ relatorios/ data/
+          if git diff --cached --quiet; then
+            echo "Nada mudou. Nothing to commit."
+          else
+            git commit -m "ci: rodada mensal ${{ steps.date.outputs.yyyymm }}"
+            git push
+          fi

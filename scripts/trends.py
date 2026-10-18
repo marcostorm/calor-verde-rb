@@ -1,19 +1,22 @@
-"""Série temporal de LST por setor a partir dos snapshots anuais.
+"""Série temporal de LST por setor a partir dos snapshots.
 
-Lê `snapshots/<ano>/ranking.csv` (ou qualquer dir com subpastas numéricas de 4
-dígitos contendo esse arquivo) e produz `data/out/trends/setor_lst.csv` com
-uma coluna de LST média por ano. Marca setores cuja variação total está
+Lê `snapshots/<chave>/ranking.csv` e produz `data/out/trends/setor_lst.csv`
+com uma coluna de LST por período. Marca setores cuja variação total está
 acima da média da cidade + 1σ da cidade.
 
-Uso:
-    python scripts/trends.py                               # snapshots/ e data/out/
-    python scripts/trends.py --snapshots dir --out dir
-    python scripts/trends.py --col lst_mean                # (default) ou lst_percentile_90
+Granularidade:
+    annual   (default): varre snapshots/YYYY/ranking.csv
+    monthly:            varre snapshots/YYYY-MM/ranking.csv
 
-Com só 1 ano disponível, roda e avisa — o CSV sai com só uma coluna.
+Uso:
+    python scripts/trends.py                              # anual, snapshots/ e data/out/
+    python scripts/trends.py --granularidade monthly      # mensal
+    python scripts/trends.py --snapshots dir --out dir
+    python scripts/trends.py --col lst_percentile_90      # (default: lst_mean)
+
+Com só 1 período disponível, roda e avisa — o CSV sai com só uma coluna.
 """
 import argparse
-import glob
 import logging
 import os
 import re
@@ -23,22 +26,28 @@ import pandas as pd
 
 logger = logging.getLogger("trends")
 
-YEAR_RE = re.compile(r"^\d{4}$")
+ANNUAL_RE = re.compile(r"^\d{4}$")
+MONTHLY_RE = re.compile(r"^\d{4}-\d{2}$")
 
 
-def discover_snapshots(snapshots_dir):
-    """Retorna {ano: path_ranking} pra toda subpasta `YYYY/` com ranking.csv."""
+def discover_snapshots(snapshots_dir, granularidade):
+    """Retorna {chave: path_ranking} pra subpastas que casam o padrão da granularidade.
+
+    annual  → chave 'YYYY'    (ex.: '2025', '2026')
+    monthly → chave 'YYYY-MM' (ex.: '2026-07', '2026-08')
+    """
+    regex = ANNUAL_RE if granularidade == "annual" else MONTHLY_RE
     found = {}
     for entry in sorted(os.listdir(snapshots_dir)):
-        if not YEAR_RE.match(entry):
+        if not regex.match(entry):
             continue
         p = os.path.join(snapshots_dir, entry, "ranking.csv")
         if os.path.exists(p):
-            found[int(entry)] = p
+            found[entry] = p
     return found
 
 
-def load_year(path, col):
+def load_period(path, col):
     df = pd.read_csv(path, dtype={"nome": str})
     cols = ["nome"]
     if "bairro" in df.columns:
@@ -51,31 +60,32 @@ def load_year(path, col):
 
 def build_series(found, col):
     """Faz merge por 'nome' (CD_SETOR) em um único DataFrame largo."""
-    years = sorted(found)
-    first_year = years[0]
-    base = load_year(found[first_year], col).rename(columns={col: str(first_year)})
+    periods = sorted(found)  # strings ordenam lexicograficamente (YYYY ou YYYY-MM)
+    first = periods[0]
+    base = load_period(found[first], col).rename(columns={col: first})
     if "bairro" not in base.columns:
         base["bairro"] = None
-    out = base[["nome", "bairro", str(first_year)]].copy()
-    for y in years[1:]:
-        df = load_year(found[y], col).rename(columns={col: str(y)})
+    out = base[["nome", "bairro", first]].copy()
+    for p in periods[1:]:
+        df = load_period(found[p], col).rename(columns={col: p})
         if "bairro" in df.columns and out["bairro"].isna().all():
             out["bairro"] = df.set_index("nome")["bairro"].reindex(out["nome"]).values
-        out = out.merge(df[["nome", str(y)]], on="nome", how="outer")
-    return out, years
+        out = out.merge(df[["nome", p]], on="nome", how="outer")
+    return out, periods
 
 
-def mark_outliers(series, years):
+def mark_outliers(series, periods, granularidade):
     """Marca setores com delta_total acima de média_cidade + 1σ_cidade."""
-    year_cols = [str(y) for y in years]
-    if len(years) < 2:
+    period_cols = list(periods)
+    delta_label = "delta_anual_media" if granularidade == "annual" else "delta_mensal_media"
+    if len(periods) < 2:
         series["delta_total"] = None
-        series["delta_anual_media"] = None
+        series[delta_label] = None
         series["alerta"] = False
-        return series
-    values = series[year_cols]
-    series["delta_total"] = (values[year_cols[-1]] - values[year_cols[0]]).round(2)
-    series["delta_anual_media"] = (series["delta_total"] / (len(years) - 1)).round(2)
+        return series, delta_label
+    values = series[period_cols]
+    series["delta_total"] = (values[period_cols[-1]] - values[period_cols[0]]).round(2)
+    series[delta_label] = (series["delta_total"] / (len(periods) - 1)).round(2)
     valid = series["delta_total"].dropna()
     mean = float(valid.mean())
     sigma = float(valid.std(ddof=0))
@@ -85,38 +95,43 @@ def mark_outliers(series, years):
     )
     logger.info("variação da cidade: média=%.2f°C, σ=%.2f°C, corte=%.2f°C",
                 mean, sigma, cutoff)
-    return series
+    return series, delta_label
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--snapshots", default="snapshots",
-                    help="diretório com subpastas YYYY/ contendo ranking.csv")
+                    help="diretório com subpastas de snapshot contendo ranking.csv")
     ap.add_argument("--out", default="data/out/trends",
                     help="diretório onde gravar setor_lst.csv")
     ap.add_argument("--col", default="lst_mean",
                     help="coluna do ranking.csv a seguir no tempo (default: lst_mean)")
+    ap.add_argument("--granularidade", choices=["annual", "monthly"], default="annual",
+                    help="varre YYYY/ (annual) ou YYYY-MM/ (monthly)")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
 
-    found = discover_snapshots(args.snapshots)
+    found = discover_snapshots(args.snapshots, args.granularidade)
     if not found:
-        sys.exit(f"nenhum snapshot encontrado em {args.snapshots}/YYYY/ranking.csv")
-    logger.info("snapshots encontrados: %s", sorted(found))
+        padrao = "YYYY" if args.granularidade == "annual" else "YYYY-MM"
+        sys.exit(f"nenhum snapshot {padrao}/ranking.csv em {args.snapshots}/")
+    logger.info("snapshots %s encontrados: %s", args.granularidade, sorted(found))
 
-    series, years = build_series(found, args.col)
-    series = mark_outliers(series, years)
+    series, periods = build_series(found, args.col)
+    series, delta_label = mark_outliers(series, periods, args.granularidade)
 
     os.makedirs(args.out, exist_ok=True)
     path = os.path.join(args.out, "setor_lst.csv")
-    cols_order = ["nome", "bairro"] + [str(y) for y in years]
-    if len(years) >= 2:
-        cols_order += ["delta_total", "delta_anual_media", "alerta"]
+    cols_order = ["nome", "bairro"] + list(periods)
+    if len(periods) >= 2:
+        cols_order += ["delta_total", delta_label, "alerta"]
     series[cols_order].to_csv(path, index=False)
-    logger.info("escrito: %s (%d setores, %d anos)", path, len(series), len(years))
+    logger.info("escrito: %s (%d setores, %d períodos)", path, len(series), len(periods))
 
-    if len(years) < 2:
-        logger.warning("só %d ano disponível — tendências precisam de ≥2 anos", len(years))
+    if len(periods) < 2:
+        unidade = "ano" if args.granularidade == "annual" else "mês"
+        logger.warning("só %d %s disponível — tendências precisam de ≥2 períodos",
+                       len(periods), unidade)
     else:
         n_alerta = int(series["alerta"].sum())
         logger.info("setores em alerta (esquentando acima do normal): %d", n_alerta)

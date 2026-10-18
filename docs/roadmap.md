@@ -155,16 +155,9 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
 
 **Entregáveis:**
 
-8.1 **GitHub Actions mensal:**
-   - Cron no dia 5 de cada mês roda `extract_gee.py` + `analyze.py` + `scripts/relatorio.py`
-   - Precisa resolver autenticação GEE em CI: service account dedicada (scope só Earth Engine), JSON em `GitHub Secrets`, nunca no repo
-   - Commita snapshot em `snapshots/YYYY-MM/` e PDF em `relatorios/calor-verde-rb_YYYY-MM-05.pdf`
-   - Trigger `workflow_dispatch` pra rodar manual quando necessário
+✅ 8.1 **GitHub Actions mensal** (feito em 2026-10-18). `.github/workflows/mensal.yml` com cron `0 10 5 * *` + `workflow_dispatch`. Roda em sequência: `extract_gee.py` → `fetch_focos_inpe.py` (continue-on-error) → `analyze.py` conservador + amplo → snapshot mensal → `trends.py` → `relatorio.py` → commit + push. `extract_gee.py:init()` ganhou suporte a service account via env `GEE_SERVICE_ACCOUNT_KEY_JSON`; fallback pro `earthengine authenticate` local se não setada. Dois GitHub Secrets necessários: `GEE_PROJECT` e `GEE_SERVICE_ACCOUNT_KEY_JSON`. Setup documentado em `docs/operacao.md` seção "Rodada mensal automática". Pendente execução real: Marcos precisa criar service account no Google Cloud + registrar no Earth Engine + colar JSON no secret.
 
-8.2 **Snapshot mensal:**
-   - Convenção `snapshots/YYYY-MM/` (12 por ano) além do `snapshots/YYYY/` anual atual
-   - `trends.py` passa a varrer mensais além dos anuais (regex `^\d{4}(-\d{2})?$`)
-   - Permite responder "qual mês foi mais quente de 2026?" com dado
+✅ 8.2 **Snapshot mensal** (feito em 2026-10-18). `trends.py` ganhou flag `--granularidade annual|monthly` que troca o regex de descoberta: `YYYY/` (default, backwards-compatible) ou `YYYY-MM/`. Workflow mensal grava automaticamente em `snapshots/YYYY-MM/` ao lado do anual. Testes anteriores continuam passando (10/10). Chaves agora são strings (ordenam lexicograficamente); nova coluna `delta_mensal_media` quando granularidade = monthly, `delta_anual_media` continua pra annual. Rotulado como `delta_label` dinâmico pra não misturar semântica.
 
 8.3 **Relatório anual compilado** (`scripts/relatorio_anual.py`):
    - Varre `snapshots/YYYY-MM/` de um ano, agrega e emite PDF de 12-15 páginas

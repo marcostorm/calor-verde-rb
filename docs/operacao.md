@@ -168,6 +168,41 @@ libpangoft2-1.0-0`.
 Rodar após congelar um snapshot anual pra ter um relatório datado por
 versão: `cp relatorios/calor-verde-rb_YYYY-MM-DD.pdf snapshots/YYYY/`.
 
+## Rodada mensal automática (`.github/workflows/mensal.yml`)
+
+Workflow do GitHub Actions que roda o pipeline inteiro no dia 5 de cada
+mês, 10h UTC (= 7h BRT), e commita snapshot + PDF novo. Também aceita
+trigger manual (`workflow_dispatch`) com opção `skip_extract` pra reusar
+TIFs commitados sem rebaixar do GEE.
+
+**Setup único** (feito uma vez pela mantenedora do repo):
+
+1. **Criar service account no Google Cloud Console**:
+   - Projeto do GEE (ex.: `meu-projeto-301501`) → IAM & Admin → Service Accounts → Create
+   - Nome sugerido: `calor-verde-ci@...iam.gserviceaccount.com`
+   - Permissão mínima: Earth Engine Resource Admin (role `roles/earthengine.resourceAdmin`)
+2. **Gerar chave JSON** da service account (botão "Keys" → "Add Key" → JSON) e baixar
+3. **Registrar essa service account no Earth Engine**:
+   - Acessar <https://console.cloud.google.com/earth-engine> e aprovar o email dela
+   - OU rodar localmente: `earthengine --project=SEU-PROJETO authenticate --service_account_file=key.json`
+4. **GitHub Secrets** (Settings → Secrets → Actions do repo):
+   - `GEE_PROJECT` = id do projeto GCP (ex.: `meu-projeto-301501`)
+   - `GEE_SERVICE_ACCOUNT_KEY_JSON` = conteúdo completo do JSON (abre o arquivo, cola o conteúdo inteiro no secret)
+
+Depois disso, o workflow roda sozinho mensalmente. Pra testar antes do
+primeiro cron, dispare manual: Actions tab → "Rodada mensal" → "Run workflow".
+
+**Produto da rodada**:
+- `snapshots/YYYY-MM/` com `ranking.csv`, `resumo.json`, `unidades_prioridade.geojson`
+- `relatorios/calor-verde-rb_YYYY-MM-DD.pdf` (atualizado) + `calor-verde-rb_latest.pdf`
+- Opcional: `data/out/trends/mensal/setor_lst.csv` com série mensal
+- Commit automático pelo `github-actions[bot]`
+
+**Falhas comuns**:
+- Overpass fora do ar → `fetch_focos_inpe.py` falha mas `continue-on-error: true` no yml deixa a rodada seguir sem focos no mês
+- Service account sem permissão GEE → mensagem "not registered to use Earth Engine" no extract. Fix: registrar no console.cloud.google.com/earth-engine
+- Timeout de 60 min atingido → rodada pesada; aumentar `timeout-minutes` no yml
+
 ## Atualizar dependências
 
 As versões em `requirements.txt` estão pinadas. Para atualizar com segurança:

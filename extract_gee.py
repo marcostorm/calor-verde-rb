@@ -24,7 +24,20 @@ import config as C
 def init():
     if not C.GEE_PROJECT:
         sys.exit("Defina GEE_PROJECT com o ID do seu projeto Google Cloud.")
-    ee.Initialize(project=C.GEE_PROJECT)
+    # Em CI: GEE_SERVICE_ACCOUNT_KEY_JSON contém o JSON da service account inline
+    # (criada no Google Cloud Console → IAM → Service Accounts → Keys → JSON).
+    # Localmente: usa a credencial salva por `earthengine authenticate`.
+    sa_json = os.environ.get("GEE_SERVICE_ACCOUNT_KEY_JSON")
+    if sa_json:
+        import tempfile
+        data = json.loads(sa_json)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(data, f)
+            key_path = f.name
+        credentials = ee.ServiceAccountCredentials(data["client_email"], key_path)
+        ee.Initialize(credentials, project=C.GEE_PROJECT)
+    else:
+        ee.Initialize(project=C.GEE_PROJECT)
 
 
 def aoi():
