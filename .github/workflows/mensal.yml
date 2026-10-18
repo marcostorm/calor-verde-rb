@@ -3,8 +3,11 @@ name: Rodada mensal
 # Dia 5 de cada mês, 10h UTC (= 7h BRT, horário de pouco tráfego Overpass).
 # workflow_dispatch permite trigger manual pelo painel do GitHub.
 on:
-  schedule:
-    - cron: '0 10 5 * *'
+  # Cron desligado até o setup do GEE service account estar pronto
+  # (ver docs/operacao.md seção "Rodada mensal automática").
+  # Pra ativar: descomentar o schedule abaixo.
+  # schedule:
+  #   - cron: '0 10 5 * *'
   workflow_dispatch:
     inputs:
       skip_extract:
