@@ -471,10 +471,6 @@ def main():
     ap.add_argument("--col-arbor", default="pct_arborizacao")
     ap.add_argument("--focos", help="CSV de focos INPE (ver scripts/fetch_focos_inpe.py); "
                                      "point-in-polygon conta focos por setor em focos_estacao")
-    ap.add_argument("--modis-fallback",
-                    help="TIF MODIS LST 1km (ver scripts/extract_modis.py); preenche setores "
-                         "que continuam cinzas após interpolação por buffer. Coluna fonte_lst "
-                         "marca a origem: landsat / buffer / modis")
     ap.add_argument("--min-cobertura", type=float, default=0.5,
                     help="fração mínima de pixels válidos de calor para a unidade entrar no ranking")
     ap.add_argument("--sem-pois", action="store_true")
@@ -609,32 +605,6 @@ def _run_pipeline(args, writer, recorder=None):
             recorder.set("modo_interpolacao", modo, bucket="counts")
             ok = ok | gdf["interpolado"]
 
-    gdf["modis_fallback"] = False
-    if args.modis_fallback and (~ok).any():
-        with recorder.stage("modis_fallback"):
-            modis_arr, modis_tr, _ = read_raster(args.modis_fallback)
-            remanescentes = gdf.loc[~ok]
-            stats = zonal_stats(
-                remanescentes.geometry, modis_arr,
-                affine=modis_tr, nodata=np.nan,
-                stats=["mean", "count"], all_touched=True,
-            )
-            n_recuperados = 0
-            for idx, s in zip(remanescentes.index, stats):
-                if s.get("count", 0) > 0 and s.get("mean") is not None:
-                    gdf.loc[idx, "lst_mean"] = s["mean"]
-                    gdf.loc[idx, "modis_fallback"] = True
-                    n_recuperados += 1
-            gdf["anomalia_calor"] = gdf["lst_mean"] - lst_mean
-            ok = ok | gdf["modis_fallback"]
-            logger.info("MODIS fallback: %d setores recuperados (1km)", n_recuperados)
-            recorder.set("modis_recuperados", n_recuperados, bucket="counts")
-
-    gdf["fonte_lst"] = None
-    gdf.loc[gdf["lst_mean"].notna(), "fonte_lst"] = "landsat"
-    gdf.loc[gdf["interpolado"] == True, "fonte_lst"] = "buffer"
-    gdf.loc[gdf["modis_fallback"] == True, "fonte_lst"] = "modis"
-
     g = gdf[ok].copy()
     recorder.set("com_rank", int(ok.sum()), bucket="counts")
     recorder.set("cinzas", int((~ok).sum()), bucket="counts")
@@ -654,7 +624,7 @@ def _run_pipeline(args, writer, recorder=None):
 
     cols = ["rank", "nome", "bairro", "indice_prioridade", "lst_mean", "lst_percentile_90",
             "anomalia_calor", "ndvi_atual_mean", "ndvi_delta", "perda_ha", "perda_pct",
-            "area_ha", "cobertura_calor", "interpolado", "fonte_lst"]
+            "area_ha", "cobertura_calor", "interpolado"]
     if args.arborizacao:
         cols.append(args.col_arbor)
     if args.focos:

@@ -236,9 +236,6 @@
       <dt>Setor estimado por buffer (interpolado)</dt>
       <dd>Setor sem cobertura de pixels suficiente, com métricas estimadas a partir de um buffer de 3,5 km ao redor da geometria, restrito à mesma SITUACAO (urbano amostra urbano, rural amostra rural). Aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro. Erro típico: ±2,3 °C (cross-validation leave-one-out).</dd>
 
-      <dt>Setor com temperatura via MODIS 1 km</dt>
-      <dd>Setor que continuou sem dado mesmo após o buffer de 3,5 km recebe fallback do MODIS Terra+Aqua (composite 8 dias, 1 km de resolução). Aparecem com <span style="color:#6b4e9e">borda tracejada roxa</span>. MODIS tem revisita quase diária então vence nuvem persistente, mas 1 km é grosseiro — um pixel cobre vários setores urbanos ao mesmo tempo. Use como contexto; comparação com setores Landsat não é 1:1.</dd>
-
       <dt>Versões "confiável" e "mapa inteiro"</dt>
       <dd>Limiares de cobertura: 50% (confiável) ou 20% (mapa inteiro). A primeira é mais robusta para decisão pública; a segunda cobre mais setores com dado parcial.</dd>
 
@@ -379,9 +376,7 @@ function pop(f){
   }
   rows.push(`<dt>Confiança do dado</dt><dd><span class="sp-val">${((p.cobertura_calor||0)*100).toFixed(0)}%</span></dd>`);
 
-  const interp = p.fonte_lst === 'modis'
-    ? '<div class="sp-interp" style="color:#6b4e9e">temperatura via MODIS 1 km (fallback)</div>'
-    : (p.interpolado ? '<div class="sp-interp">valor estimado por buffer</div>' : '');
+  const interp = p.interpolado ? '<div class="sp-interp">valor estimado por buffer</div>' : '';
 
   return `
     <div class="sp-title">
@@ -441,21 +436,13 @@ function loadPri(ver){
     const fn = COLOR_FNS[currentModo];
     const prop = COLOR_PROP[currentModo];
     pri = L.geoJSON(gj, {
-      style: f => {
-        const fonte = f.properties.fonte_lst;
-        if(fonte === 'modis') return {
-          fillColor: fn(f.properties[prop]),
-          color: '#6b4e9e', weight: 1.0, fillOpacity: 0.45, dashArray: '2,4'
-        };
-        if(f.properties.interpolado) return {
-          fillColor: fn(f.properties[prop]),
-          color: '#b8860b', weight: 1.0, fillOpacity: 0.5, dashArray: '3,3'
-        };
-        return {
-          fillColor: fn(f.properties[prop]),
-          color: '#333', weight: 0.4, fillOpacity: 0.75
-        };
-      },
+      style: f => f.properties.interpolado ? ({
+        fillColor: fn(f.properties[prop]),
+        color: '#b8860b', weight: 1.0, fillOpacity: 0.5, dashArray: '3,3'
+      }) : ({
+        fillColor: fn(f.properties[prop]),
+        color: '#333', weight: 0.4, fillOpacity: 0.75
+      }),
       onEachFeature: (f,l)=>l.bindPopup(pop(f), {className:'sp-popup', maxWidth:300, minWidth:260})
     });
     if(document.getElementById('t-pri').checked) pri.addTo(map);

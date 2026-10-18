@@ -16,7 +16,7 @@ import pytest
 def _args_for_pipeline(fixture_dir, **overrides):
     base = dict(
         unidades=fixture_dir["unidades"],
-        dissolver=None, arborizacao=None, focos=None, modis_fallback=None,
+        dissolver=None, arborizacao=None, focos=None,
         chave="nome", col_arbor="pct_arborizacao",
         min_cobertura=0.5, sem_pois=True, sem_interpolar=True,
         buffer_interp=3500, min_pixels_interp=50,
