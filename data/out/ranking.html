@@ -29,7 +29,7 @@
   }
   html,body{margin:0;font-family:var(--sans);color:var(--text);background:var(--bg-page);font-size:14px;line-height:1.5}
   body{position:relative}
-  body::before{content:'';position:fixed;inset:0;background:url('img/leaf.svg') repeat;background-size:48px;mix-blend-mode:multiply;opacity:.05;pointer-events:none;z-index:0}
+  body::before{content:'';position:fixed;inset:0;background:url('img/leaf.svg') repeat;background-size:32px;mix-blend-mode:multiply;opacity:.03;pointer-events:none;z-index:0}
   body > *{position:relative;z-index:1}
   h1 .brand-leaf{width:30px;height:30px;vertical-align:-7px;margin-right:10px}
   .wrap{max-width:1200px;margin:0 auto;padding:28px 24px 48px}
@@ -157,7 +157,11 @@ const COLS = [
   {k:'ndvi_atual_mean', l:'Vegetação', align:'r', fmt:v=>fmtNum(v,2)},
   {k:'perda_pct', l:'% perdida', align:'r', fmt:v=>v==null?'—':fmtNum(v,0)+'%'},
   {k:'pct_arborizacao', l:'Arborização', align:'r', fmt:v=>v==null?'—':fmtNum(v,0)+'%'},
-  {k:'focos_estacao', l:'Focos', align:'r', fmt:v=>v==null?'—':String(Math.round(v))},
+  {k:'focos_estacao', l:'Focos', align:'r', fmt:v=>{
+    if(v==null) return '—';
+    const n = Math.round(v);
+    return n===0 ? '<span style="color:var(--text-faint);opacity:.5">0</span>' : String(n);
+  }},
   {k:'cobertura_calor', l:'Confiança', align:'r', fmt:v=>v==null?'—':(v*100).toFixed(0)+'%'},
 ];
 

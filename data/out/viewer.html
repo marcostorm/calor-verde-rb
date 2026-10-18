@@ -32,7 +32,7 @@
   #map{position:absolute;inset:0 380px 0 0;background:#e5ebdc}
   .leaflet-tile-pane{filter:grayscale(.65) brightness(1.08) contrast(.92)}
   #side{position:absolute;top:0;right:0;bottom:0;width:380px;overflow:auto;padding:20px 18px;background:var(--bg-page);border-left:1px solid var(--border-soft);box-sizing:border-box;font-size:14px;line-height:1.45}
-  #side::before{content:'';position:absolute;inset:0;background:url('img/leaf.svg') repeat;background-size:48px;mix-blend-mode:multiply;opacity:.05;pointer-events:none;z-index:0}
+  #side::before{content:'';position:absolute;inset:0;background:url('img/leaf.svg') repeat;background-size:32px;mix-blend-mode:multiply;opacity:.03;pointer-events:none;z-index:0}
   body.exporting #side::before{display:none}
   #side > *{position:relative;z-index:1}
   h1 .brand-leaf{width:28px;height:28px;vertical-align:-6px;margin-right:8px}
@@ -347,9 +347,8 @@ function pop(f){
   if(p.pct_arborizacao != null){
     rows.push(`<dt>Arborização na calçada</dt><dd><span class="sp-val">${fmtNum(p.pct_arborizacao, 0)}%</span><span class="sp-pill-muted">IBGE 2022</span></dd>`);
   }
-  if(p.focos_estacao != null){
-    const nFocos = Number(p.focos_estacao) || 0;
-    rows.push(`<dt>Focos de queimada</dt><dd><span class="sp-val">${nFocos}</span><span class="sp-pill-muted">jun–set, INPE</span></dd>`);
+  if(p.focos_estacao != null && Number(p.focos_estacao) > 0){
+    rows.push(`<dt>Focos de queimada</dt><dd><span class="sp-val">${Number(p.focos_estacao)}</span><span class="sp-pill-muted">jun–set, INPE</span></dd>`);
   }
   rows.push(`<dt>Confiança do dado</dt><dd><span class="sp-val">${((p.cobertura_calor||0)*100).toFixed(0)}%</span></dd>`);
 
