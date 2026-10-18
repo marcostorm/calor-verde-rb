@@ -166,7 +166,8 @@
     <label class="toggle"><input type="checkbox" id="t-pri" checked> Mapa colorido</label>
     <div style="margin-left:20px;margin-bottom:6px">
       <label><input type="radio" name="modo" value="prioridade" checked> pela nota de prioridade</label><br>
-      <label><input type="radio" name="modo" value="lst"> pela temperatura do chão</label>
+      <label><input type="radio" name="modo" value="lst"> pela temperatura do chão (2026)</label><br>
+      <label><input type="radio" name="modo" value="delta"> pela variação de temperatura (2025→2026)</label>
     </div>
     <label class="toggle"><input type="checkbox" id="t-edu" checked> Escolas</label>
     <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
@@ -201,6 +202,9 @@
 
       <dt>Arborização na calçada (IBGE 2022)</dt>
       <dd>Percentual de moradores do setor cuja casa fica em face de quadra com pelo menos uma árvore, segundo a Pesquisa Urbanística do Entorno dos Domicílios do Censo 2022. Complementa o NDVI do satélite com o que o IBGE viu em campo. Nem todo setor foi pesquisado: 87 setores de Rio Branco (sobretudo rurais) ficam sem valor.</dd>
+
+      <dt>Variação de temperatura 2025→2026</dt>
+      <dd>Diferença de temperatura do chão (LST) entre a estação seca de 2025 e a de 2026, por setor. Positivo = esquentou, negativo = esfriou. Vem de <code>scripts/trends.py</code> comparando <code>snapshots/2025/</code> e <code>snapshots/2026/</code>. Em 2026 Rio Branco esquentou em média 2,5°C vs. 2025 (88% dos setores afetados). <b>Dois anos ainda não é tendência climática robusta</b>: pode refletir variabilidade interanual (seca mais severa em 2026 que em 2025), não só aquecimento regional sistêmico. Pra tendência real precisa de ≥5 anos; estamos construindo a série.</dd>
 
       <dt>Focos de queimada (INPE)</dt>
       <dd>Detecções pontuais de assinatura térmica compatível com fogo, feitas pelo satélite AQUA_M-T (referência histórica do INPE desde 2002) na estação seca (jun–set). Cada ponto no mapa é uma passagem do satélite que registrou fogo num pixel de ~1 km, não o contorno da área queimada. Um foco pode corresponder a um fogo pequeno ou a um incêndio grande; a métrica mostra incidência, não extensão. Não entra no índice de prioridade: é camada de contexto pra separar "verde que caiu por queimada" de "verde que caiu por corte ou seca".</dd>
@@ -276,8 +280,16 @@ function colorLST(v){
   for(let i=0;i<b.length;i++) if(v<b[i]) return PALETTE[i];
   return PALETTE[6];
 }
-const COLOR_FNS = { prioridade: colorPri, lst: colorLST };
-const COLOR_PROP = { prioridade: 'indice_prioridade', lst: 'lst_mean' };
+// Divergente centrada em zero pra variação ano a ano (RdBu invertido: azul=esfriou, vermelho=esquentou)
+const PALETTE_DIV = ['#2166ac','#67a9cf','#d1e5f0','#fddbc7','#ef8a62','#b2182b','#67001f'];
+function colorDelta(v){
+  if(v==null) return '#ccc';
+  const b = [-1, -0.5, 0.5, 1.5, 3, 5];  // bins calibrados pra Δ anual observado em RB
+  for(let i=0;i<b.length;i++) if(v<b[i]) return PALETTE_DIV[i];
+  return PALETTE_DIV[6];
+}
+const COLOR_FNS = { prioridade: colorPri, lst: colorLST, delta: colorDelta };
+const COLOR_PROP = { prioridade: 'indice_prioridade', lst: 'lst_mean', delta: '_delta' };
 const THERMO = '<svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>';
 const LEGEND_SPECS = {
   prioridade: {
@@ -287,6 +299,10 @@ const LEGEND_SPECS = {
   lst: {
     title: THERMO + 'Temperatura do chão (°C)',
     bins: [[0,'<28'],[28,'28–32'],[32,'32–36 (média da cidade)'],[36,'36–40 (zona de calor extremo)'],[40,'40–44'],[44,'44–48'],[48,'≥48']]
+  },
+  delta: {
+    title: 'Variação de temperatura 2025→2026 (°C)',
+    bins: [[-2,'esfriou >1'],[-0.9,'esfriou 0,5–1'],[-0.4,'quase estável'],[0.6,'+0,5 a 1,5'],[1.6,'+1,5 a 3'],[3.1,'+3 a 5'],[5.1,'esquentou >5']]
   }
 };
 
@@ -342,6 +358,14 @@ function pop(f){
 
   const rows = [];
   rows.push(`<dt>Temperatura do chão</dt><dd><span class="sp-val">${THERMO}${fmtNum(p.lst_mean)} °C</span>${anomPill}</dd>`);
+  if(p._delta != null && !isNaN(p._delta)){
+    const dv = p._delta;
+    const sinal = dv > 0 ? '+' : (dv < 0 ? '−' : '');
+    const dPill = dv >= 1.5 ? `<span class="sp-pill sp-pill-bad">esquentou</span>`
+                : dv <= -0.5 ? `<span class="sp-pill sp-pill-good">esfriou</span>`
+                : `<span class="sp-pill-muted">estável</span>`;
+    rows.push(`<dt>Variação 2025→2026</dt><dd><span class="sp-val">${sinal}${fmtNum(Math.abs(dv))} °C</span>${dPill}</dd>`);
+  }
   rows.push(`<dt>Vegetação (índice)</dt><dd><span class="sp-val">${fmtNum(p.ndvi_atual_mean, 2)}</span>${ndviPill}</dd>`);
   rows.push(`<dt>Vegetação perdida</dt><dd><span class="sp-val">${fmtNum(p.perda_ha, 2)} ha</span>${perdaPill}</dd>`);
   if(p.pct_arborizacao != null){
@@ -375,10 +399,40 @@ function clearPri(){
   document.querySelector('#top tbody').innerHTML = '';
 }
 
+// Mapa setor → variação °C 2025→2026 (lido uma vez de data/out/trends/setor_lst.csv)
+let trendsByNome = null;
+function loadTrends(){
+  if(trendsByNome !== null) return Promise.resolve(trendsByNome);
+  return fetch('trends/setor_lst.csv').then(r => r.ok ? r.text() : '').then(txt => {
+    const m = {};
+    if(!txt) { trendsByNome = m; return m; }
+    const lines = txt.trim().split('\n');
+    const header = lines[0].split(',');
+    const iNome = header.indexOf('nome'), iDelta = header.indexOf('delta_total');
+    const i2025 = header.indexOf('2025'), i2026 = header.indexOf('2026');
+    for(let k=1;k<lines.length;k++){
+      const parts = lines[k].split(',');
+      const d = parseFloat(parts[iDelta]);
+      m[parts[iNome]] = {
+        delta: isNaN(d) ? null : d,
+        lst2025: parseFloat(parts[i2025]) || null,
+        lst2026: parseFloat(parts[i2026]) || null,
+      };
+    }
+    trendsByNome = m;
+    return m;
+  }).catch(() => (trendsByNome = {}));
+}
+
 function loadPri(ver){
   clearPri();
   const file = `unidades_prioridade_${ver}.geojson`;
-  fetch(file).then(r=>r.json()).then(gj=>{
+  Promise.all([fetch(file).then(r=>r.json()), loadTrends()]).then(([gj, t])=>{
+    // injeta _delta nas properties pra o choropleth e o popup acessarem
+    gj.features.forEach(f => {
+      const row = t[f.properties.nome];
+      f.properties._delta = row ? row.delta : null;
+    });
     const fn = COLOR_FNS[currentModo];
     const prop = COLOR_PROP[currentModo];
     pri = L.geoJSON(gj, {
