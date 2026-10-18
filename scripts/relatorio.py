@@ -150,7 +150,7 @@ p { margin: 0 0 6pt; }
 .sumario li .valor { font-family: 'Lora', serif; font-weight: 700; font-size: 17pt; color: #2d5a3d; min-width: 90pt; font-variant-numeric: tabular-nums; }
 .sumario li .texto { flex: 1; font-size: 9.5pt; color: #1a2621; line-height: 1.4; }
 .mapa { margin: 6pt 0 10pt; }
-.mapa img { width: 100%; max-height: 160mm; object-fit: contain; display: block; }
+.mapa img { width: 100%; max-height: 120mm; object-fit: contain; display: block; }
 .mapa-compact img { max-height: 125mm; }
 .pg-mapa { page-break-before: always; }
 .pg-mapa h2 { margin-top: 0; }
@@ -272,9 +272,32 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
 </section>
         """
 
+    # POIs em zona de calor extremo (do resumo)
+    zq = resumo.get("pois_em_zona_quente") or {}
+    tt = resumo.get("pois_total") or {}
+    poi_labels = [("Escolas", "educacao"), ("Postos de saúde", "saude"), ("Pontos de ônibus", "ponto_onibus")]
+    poi_rows_html = ""
+    for label, chave in poi_labels:
+        i, t = int(zq.get(chave) or 0), int(tt.get(chave) or 0)
+        if t == 0:
+            continue
+        pct = round(100 * i / t)
+        # cor baseada na severidade (igual nivel na tabela)
+        cor = "#b10026" if pct >= 85 else "#fc4e2a" if pct >= 55 else "#fd8d3c" if pct >= 25 else "#feb24c"
+        poi_rows_html += (
+            f"<tr><td>{label}</td>"
+            f"<td class='r'><b>{i}</b> de {t}</td>"
+            f"<td class='r' style='color:{cor};font-weight:600'>{pct}%</td></tr>"
+        )
+
+    # equivalente em campos de futebol (105x68m = 0,714 ha)
+    campos_futebol = int(round(perda_total / 0.714))
+    perda_ha_fmt = f"{int(round(perda_total)):,}".replace(",", ".")
+    campos_fmt = f"{campos_futebol:,}".replace(",", ".")
+
     stats_sumario = []
     stats_sumario.append((fmt_num(lst_media) + "°C", f"temperatura média do chão em {C.YEAR_NOW} na estação seca; medida pelo Landsat 8/9"))
-    stats_sumario.append((f"{int(round(perda_total)):,}".replace(",", ".") + " ha", f"de vegetação perdida entre {C.YEAR_BASE} e {C.YEAR_NOW}"))
+    stats_sumario.append((perda_ha_fmt + " ha", f"de vegetação perdida entre {C.YEAR_BASE} e {C.YEAR_NOW} &mdash; equivalente a cerca de <b>{campos_fmt} campos de futebol</b> (padrão FIFA 105×68 m)"))
     stats_sumario.append((f"{n_rank}", f"setores censitários com dado confiável; {n_total - n_rank} descartados por nuvem persistente"))
     if tem_tendencia:
         stats_sumario.append((f"+{fmt_num(delta_medio)}°C", f"aquecimento médio em um ano ({quente_pct}% dos setores esquentaram)"))
@@ -343,6 +366,10 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
     <span><i style="background:#b10026"></i>crítica</span>
     <span><i style="background:white;border:1px dashed #b8860b"></i>estimado por buffer</span>
   </div>
+  {('<div class="tabela-pequena" style="margin-top:16pt"><h3>Lugares de uso coletivo em zona de calor extremo</h3>'
+    '<p style="font-size:9pt;color:#5a6b63;margin:0 0 6pt">Escolas, postos de saúde e pontos de ônibus cujas coordenadas (OpenStreetMap) caem num pixel com temperatura acima do limiar de zona de calor extremo. Alto percentual significa infraestrutura pública exposta e, portanto, prioritária pra sombreamento.</p>'
+    '<table><thead><tr><th>Lugar</th><th class="r">Em zona de calor extremo</th><th class="r">%</th></tr></thead>'
+    f'<tbody>{poi_rows_html}</tbody></table></div>') if poi_rows_html else ''}
 </section>
 
 {secao_delta}
