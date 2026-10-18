@@ -1,0 +1,612 @@
+{
+  "versao": "0.1-draft",
+  "data_geracao": "2026-10-18",
+  "licenca": "CC BY 4.0",
+  "status": "rascunho não validado por engenheiro florestal — não usar como recomendação definitiva de plantio",
+  "cobertura": "20 espécies arbóreas candidatas para arborização urbana em Rio Branco (AC), cruzando fontes técnicas da Amazônia ocidental, inventário local e normas municipais",
+
+  "legenda_campos": {
+    "origem": {
+      "nativa_amazonia_ocidental": "ocorrência natural restrita à Amazônia ocidental brasileira (AC, parte de AM/RO)",
+      "nativa_brasil": "nativa do Brasil, não exclusiva da Amazônia (ex: ipês, oiti)",
+      "exotica": "não nativa do Brasil"
+    },
+    "porte": {
+      "pequeno": "até 6 m de altura adulta",
+      "medio": "6 a 12 m",
+      "grande": "12 a 25 m",
+      "muito_grande": "acima de 25 m — recomendado apenas para parques e áreas abertas"
+    },
+    "crescimento": {
+      "rapido": "incremento anual em altura > 1,5 m",
+      "medio": "0,8 a 1,5 m/ano",
+      "lento": "< 0,8 m/ano"
+    },
+    "raiz": {
+      "pivotante": "aprofunda, pouco agressiva com calçada",
+      "superficial_leve": "superficial mas sem forçar calçada",
+      "superficial_agressiva": "quebra piso e tubulação — EVITAR em calçada estreita",
+      "mista": "combina pivotante com superficiais"
+    },
+    "contextos_adequados": {
+      "calcada_estreita": "até 2 m de largura livre",
+      "calcada_media": "2 a 4 m",
+      "calcada_larga": "acima de 4 m",
+      "canteiro_central": "canteiros de avenida",
+      "praca": "praça pública arborizada",
+      "parque": "parque ou área de preservação",
+      "quintal_residencial": "lote particular com espaço"
+    }
+  },
+
+  "fontes": {
+    "embrapa_arbopasto_cap4": {
+      "titulo": "Arborização de pastagens na Amazônia Ocidental — Capítulo 4: Guia de espécies",
+      "autores": "Andrade, C. M. S. et al.",
+      "instituicao": "Embrapa Acre",
+      "ano": null,
+      "escopo": "51 espécies arbóreas caracterizadas por 15 atributos biológicos, baseadas em experimentos no Acre e Rondônia. Foco original: sistemas silvipastoris. Aplicabilidade urbana: parcial, mediante avaliação dos atributos relevantes (porte, copa, raiz, crescimento, raízes superficiais, potencial tóxico de frutos).",
+      "url": "https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/964750/1/24666.pdf",
+      "observacao": "Fonte mais rigorosa disponível para espécies da Amazônia ocidental; dados primários coletados no Acre."
+    },
+    "miranda_valentim_embrapa": {
+      "titulo": "Desempenho de doze espécies arbóreas nativas e introduzidas com potencial de uso múltiplo no estado do Acre, Brasil",
+      "autores": "Miranda, E. M.; Valentim, J. F.",
+      "instituicao": "Embrapa Acre",
+      "ano": null,
+      "escopo": "Experimento de 4,5 anos na Estação Experimental da Embrapa Acre em Rio Branco. Dados primários de sobrevivência, crescimento em altura/ano, diâmetro basal/ano e diâmetro de copa/ano.",
+      "url": "https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/503515/1/12708.pdf"
+    },
+    "revsbau_2010": {
+      "titulo": "Inventário e diagnóstico da arborização urbana viária de Rio Branco, AC",
+      "autores": "autores REVSBAU — ver página da revista",
+      "ano": 2010,
+      "escopo": "292 árvores amostradas em calçadas de Rio Branco. 39 espécies identificadas, 11 nativas e 28 exóticas. Densidade de 4,57 árvores/km (muito abaixo da referência de 100/km).",
+      "url": "https://revistas.ufpr.br/revsbau/article/view/66256",
+      "observacao": "Fonte do 'estado atual' da arborização viária de RB — mostra o que já está plantado, não o que seria ideal."
+    },
+    "semeia_nt_005_2023": {
+      "titulo": "Nota Técnica SEMEIA Nº 005/2023 — Licenciamento ambiental relativo ao corte de árvores",
+      "instituicao": "Secretaria Municipal de Meio Ambiente e Infraestrutura Agrária — SEMEIA, Rio Branco",
+      "ano": 2023,
+      "escopo": "Declara castanheira, mogno e seringueira imunes ao corte na área urbana de Rio Branco, além de árvores com DAP ≥ 30 cm. Status implícito de 'espécies estratégicas pro município'.",
+      "url": "https://cgm.riobranco.ac.gov.br/lai/wp-content/uploads/2012/05/SEMEIA-NOTA-TECNICA-N-005-2023-Licenciamento-Ambiental-relativo-ao-corte-de-arvores.pdf"
+    },
+    "obra_estrada_aeroporto_2023": {
+      "titulo": "Projeto de arborização da estrada do Aeroporto de Rio Branco",
+      "fonte": "Portal Amazônia",
+      "ano": 2023,
+      "escopo": "Espécies escolhidas pelo projeto público: ipês, seringueira, açaí, castanheira, jacarandá, copaíba.",
+      "url": "https://portalamazonia.com/meio-ambiente/iniciado-projeto-de-arborizacao-da-estrada-do-aeroporto-de-rio-branco/"
+    },
+    "pl_pmau_rb_2025": {
+      "titulo": "Projeto de Lei Complementar — Institui o Plano Municipal de Arborização Urbana de Rio Branco (PMAU-RB)",
+      "autor": "Vereador Eber Machado",
+      "ano": 2025,
+      "escopo": "Projeto de lei em tramitação na Câmara Municipal de RB. Instrui a SEMA a elaborar o PMAU em 12 meses após publicação. Diretriz: 'priorizar o uso de espécies nativas da região amazônica, garantindo diversidade, segurança e adaptação climática'. Não contém lista de espécies.",
+      "url": "https://sapl.riobranco.ac.leg.br/media/sapl/public/materialegislativa/2025/30412/projeto_de_lei_complementar_plano_de_arborizacaoassinada.pdf"
+    },
+    "sema_ac_programa_estadual": {
+      "titulo": "Programa Estadual de Arborização Urbana",
+      "instituicao": "SEMA Acre",
+      "ano": "em elaboração",
+      "escopo": "A SEMA-AC informa que está elaborando um Programa Estadual de Arborização Urbana. Documento ainda não publicado online.",
+      "url": "https://sema.ac.gov.br/arborizacao"
+    }
+  },
+
+  "especies": [
+    {
+      "id": "castanheira",
+      "nome_popular": ["Castanheira", "Castanheira-do-Brasil", "Castanha-do-Pará"],
+      "nome_cientifico": "Bertholletia excelsa",
+      "familia": "Lecythidaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "muito_grande",
+      "altura_adulta_m": [30, 50],
+      "diametro_copa_m": [15, 25],
+      "crescimento": "lento",
+      "anos_ate_porte_util_sombra": [10, 15],
+      "anos_ate_porte_adulto": [40, 60],
+      "raiz": "pivotante",
+      "fruto": "ouriço_pesado_perigoso",
+      "contextos_adequados": ["parque", "praca", "quintal_residencial"],
+      "restricoes": [
+        "não plantar sob fiação ou em calçada — risco grave de queda de ouriço (1 a 2 kg)",
+        "exige recuo mínimo de 10 m de áreas de permanência"
+      ],
+      "status_rb": {
+        "imune_ao_corte_semeia_nt005_2023": true,
+        "documentada_em_uso_rb": true,
+        "incluida_em_obra_publica_rb": "estrada do aeroporto (2023)"
+      },
+      "fontes": ["embrapa_arbopasto_cap4", "semeia_nt_005_2023", "obra_estrada_aeroporto_2023"],
+      "observacao": "Espécie-símbolo da Amazônia. Imune ao corte em RB. Porte e queda de ouriço restringem uso a parques e grandes recuos."
+    },
+    {
+      "id": "mogno-brasileiro",
+      "nome_popular": ["Mogno", "Mogno-brasileiro", "Aguano"],
+      "nome_cientifico": "Swietenia macrophylla",
+      "familia": "Meliaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "muito_grande",
+      "altura_adulta_m": [25, 40],
+      "diametro_copa_m": [12, 20],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [8, 12],
+      "anos_ate_porte_adulto": [30, 50],
+      "raiz": "pivotante",
+      "fruto": "capsula_lenhosa_media",
+      "contextos_adequados": ["parque", "praca", "calcada_larga"],
+      "restricoes": [
+        "porte muito grande para calçada estreita ou média",
+        "vulnerável à broca-do-mogno (Hypsipyla grandella) — monitorar"
+      ],
+      "status_rb": {
+        "imune_ao_corte_semeia_nt005_2023": true,
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4", "semeia_nt_005_2023"],
+      "observacao": "Imune ao corte em RB. Madeira de alto valor comercial — risco de furto se plantada em áreas isoladas."
+    },
+    {
+      "id": "cerejeira-cumaru-cheiro",
+      "nome_popular": ["Cerejeira", "Cumaru-de-cheiro", "Cerejeira-do-Acre"],
+      "nome_cientifico": "Amburana acreana",
+      "familia": "Fabaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "grande",
+      "altura_adulta_m": [15, 25],
+      "diametro_copa_m": [8, 15],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [6, 10],
+      "anos_ate_porte_adulto": [25, 40],
+      "raiz": "pivotante",
+      "fruto": "vagem_pequena_discreta",
+      "flor_ornamental": "flores amarelas pequenas, perfumadas",
+      "contextos_adequados": ["praca", "parque", "canteiro_central", "calcada_larga"],
+      "restricoes": [
+        "evitar perto de fiação aérea — porte adulto ultrapassa 15 m",
+        "madeira valiosa — risco de furto em áreas isoladas"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4"],
+      "observacao": "Nativa restrita à Amazônia ocidental. Nome de espécie homenageia o estado do Acre. Floração perfumada é diferencial estético."
+    },
+    {
+      "id": "ipe-amarelo",
+      "nome_popular": ["Ipê-amarelo", "Pau-d'arco-amarelo"],
+      "nome_cientifico": "Handroanthus serratifolius",
+      "familia": "Bignoniaceae",
+      "origem": "nativa_brasil",
+      "porte": "grande",
+      "altura_adulta_m": [15, 25],
+      "diametro_copa_m": [8, 12],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [6, 10],
+      "anos_ate_porte_adulto": [20, 35],
+      "raiz": "pivotante",
+      "fruto": "capsula_pequena",
+      "flor_ornamental": "floração amarela intensa no fim da seca (agosto–setembro)",
+      "contextos_adequados": ["praca", "canteiro_central", "calcada_larga", "parque"],
+      "restricoes": [
+        "evitar sob fiação aérea",
+        "pólen pode causar reação em sensíveis durante o pico de floração"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true,
+        "incluida_em_obra_publica_rb": "estrada do aeroporto (2023)"
+      },
+      "fontes": ["embrapa_arbopasto_cap4", "obra_estrada_aeroporto_2023"],
+      "observacao": "Ocorre em todo o Brasil. Floração no auge da seca gera forte efeito paisagístico em RB."
+    },
+    {
+      "id": "ipe-roxo",
+      "nome_popular": ["Ipê-roxo", "Ipê-rosa", "Pau-d'arco-roxo"],
+      "nome_cientifico": "Handroanthus impetiginosus",
+      "familia": "Bignoniaceae",
+      "origem": "nativa_brasil",
+      "porte": "grande",
+      "altura_adulta_m": [12, 20],
+      "diametro_copa_m": [7, 10],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [6, 10],
+      "anos_ate_porte_adulto": [20, 35],
+      "raiz": "pivotante",
+      "fruto": "capsula_pequena",
+      "flor_ornamental": "floração rosa-arroxeada no fim da seca",
+      "contextos_adequados": ["praca", "canteiro_central", "calcada_larga", "parque"],
+      "restricoes": ["evitar sob fiação aérea"],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["obra_estrada_aeroporto_2023"],
+      "observacao": "Complemento paisagístico ao ipê-amarelo; floração em período próximo."
+    },
+    {
+      "id": "mulateiro",
+      "nome_popular": ["Mulateiro", "Pau-mulato", "Pau-mulato-da-várzea"],
+      "nome_cientifico": "Calycophyllum spruceanum",
+      "familia": "Rubiaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "grande",
+      "altura_adulta_m": [15, 25],
+      "diametro_copa_m": [6, 10],
+      "crescimento": "medio_rapido",
+      "crescimento_medido_rb_m_ano": 1.56,
+      "anos_ate_porte_util_sombra": [5, 8],
+      "anos_ate_porte_adulto": [15, 25],
+      "raiz": "pivotante",
+      "fruto": "capsula_pequena_discreta",
+      "ornamental": "troncos lisos, descamantes, coloração avermelhada — forte apelo estético",
+      "contextos_adequados": ["praca", "canteiro_central", "calcada_larga", "parque"],
+      "restricoes": [],
+      "status_rb": {
+        "documentada_em_uso_rb": true,
+        "medido_em_experimento_rb": "Miranda & Valentim — Embrapa Acre"
+      },
+      "fontes": ["embrapa_arbopasto_cap4", "miranda_valentim_embrapa"],
+      "observacao": "Nativa restrita à Amazônia ocidental. Casca descamante vermelha é diferencial paisagístico. Crescimento documentado em RB (1,56 m/ano em altura)."
+    },
+    {
+      "id": "taperaba",
+      "nome_popular": ["Taperebá", "Cajá-mirim", "Cajá"],
+      "nome_cientifico": "Spondias mombin",
+      "familia": "Anacardiaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "grande",
+      "altura_adulta_m": [15, 22],
+      "diametro_copa_m": [10, 15],
+      "crescimento": "rapido",
+      "anos_ate_porte_util_sombra": [4, 7],
+      "anos_ate_porte_adulto": [15, 25],
+      "raiz": "mista",
+      "fruto": "drupa_media_comestivel",
+      "contextos_adequados": ["praca", "parque", "quintal_residencial", "calcada_larga"],
+      "restricoes": [
+        "fruto cai e atrai moscas — evitar perto de pontos de permanência",
+        "frutos podem manchar calçada e veículos"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4"],
+      "observacao": "Fruto apreciado para suco e doce; interesse cultural amazônico. Melhor em quintal ou praça do que em calçada."
+    },
+    {
+      "id": "samauma",
+      "nome_popular": ["Samaúma", "Sumaúma"],
+      "nome_cientifico": "Ceiba pentandra",
+      "familia": "Malvaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "muito_grande",
+      "altura_adulta_m": [30, 60],
+      "diametro_copa_m": [20, 40],
+      "crescimento": "rapido",
+      "anos_ate_porte_util_sombra": [5, 8],
+      "anos_ate_porte_adulto": [30, 50],
+      "raiz": "superficial_agressiva",
+      "fruto": "capsula_media_com_paina",
+      "contextos_adequados": ["parque"],
+      "restricoes": [
+        "raízes tabulares (sapopemas) emergem do solo — INCOMPATÍVEL com calçada",
+        "paina solta no ar pode irritar alérgicos",
+        "porte muito grande — apenas parques e grandes áreas"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4"],
+      "observacao": "Árvore-símbolo da Amazônia. Beleza e importância ecológica, mas uso urbano RESTRITO a parques por conta das raízes e porte."
+    },
+    {
+      "id": "jatoba",
+      "nome_popular": ["Jatobá", "Jataí"],
+      "nome_cientifico": "Hymenaea courbaril",
+      "familia": "Fabaceae",
+      "origem": "nativa_brasil",
+      "porte": "grande",
+      "altura_adulta_m": [15, 25],
+      "diametro_copa_m": [10, 15],
+      "crescimento": "lento",
+      "anos_ate_porte_util_sombra": [10, 15],
+      "anos_ate_porte_adulto": [30, 50],
+      "raiz": "pivotante",
+      "fruto": "vagem_grande_pesada",
+      "contextos_adequados": ["praca", "parque", "calcada_larga"],
+      "restricoes": [
+        "vagem pesada (até 200 g) pode cair sobre pedestres — evitar perto de pontos de permanência",
+        "evitar sob fiação por conta do porte"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4"],
+      "observacao": "Longevidade elevada. Boa sombra densa. Vagem usada em farinha."
+    },
+    {
+      "id": "copaiba",
+      "nome_popular": ["Copaíba", "Copaibeira", "Pau-de-óleo"],
+      "nome_cientifico": "Copaifera multijuga",
+      "familia": "Fabaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "grande",
+      "altura_adulta_m": [15, 25],
+      "diametro_copa_m": [10, 15],
+      "crescimento": "lento_medio",
+      "anos_ate_porte_util_sombra": [8, 12],
+      "anos_ate_porte_adulto": [25, 40],
+      "raiz": "pivotante",
+      "fruto": "vagem_pequena",
+      "contextos_adequados": ["praca", "parque", "calcada_larga"],
+      "restricoes": ["evitar sob fiação"],
+      "status_rb": {
+        "incluida_em_obra_publica_rb": "estrada do aeroporto (2023)"
+      },
+      "fontes": ["embrapa_arbopasto_cap4", "obra_estrada_aeroporto_2023"],
+      "observacao": "Produz óleo-resina de valor medicinal. Longevidade elevada. Boa sombra densa."
+    },
+    {
+      "id": "inga-vermelho",
+      "nome_popular": ["Ingá-vermelho", "Ingá-de-metro", "Ingá"],
+      "nome_cientifico": "Inga velutina",
+      "familia": "Fabaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "medio",
+      "altura_adulta_m": [8, 15],
+      "diametro_copa_m": [8, 12],
+      "crescimento": "rapido",
+      "anos_ate_porte_util_sombra": [3, 5],
+      "anos_ate_porte_adulto": [10, 20],
+      "raiz": "pivotante",
+      "fruto": "vagem_media_comestivel",
+      "fixacao_nitrogenio": true,
+      "contextos_adequados": ["praca", "parque", "quintal_residencial", "canteiro_central"],
+      "restricoes": [
+        "fruto cai e atrai formigas",
+        "evitar sob fiação se podar irregularmente"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4"],
+      "observacao": "Crescimento rápido. Enriquece o solo (fixa nitrogênio). Fruto apreciado por fauna urbana."
+    },
+    {
+      "id": "aca-solteiro",
+      "nome_popular": ["Açaí-solteiro", "Açaí-do-amazonas"],
+      "nome_cientifico": "Euterpe precatoria",
+      "familia": "Arecaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "medio",
+      "altura_adulta_m": [10, 20],
+      "diametro_copa_m": [3, 5],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [5, 8],
+      "anos_ate_porte_adulto": [15, 25],
+      "raiz": "fasciculada_leve",
+      "fruto": "drupa_pequena_comestivel",
+      "contextos_adequados": ["canteiro_central", "praca", "parque", "quintal_residencial", "calcada_media"],
+      "restricoes": [
+        "copa pequena — sombra limitada",
+        "produção de açaí atrai fauna e, em alguns casos, catadores informais"
+      ],
+      "status_rb": {
+        "incluida_em_obra_publica_rb": "estrada do aeroporto (2023)"
+      },
+      "fontes": ["embrapa_arbopasto_cap4", "obra_estrada_aeroporto_2023"],
+      "observacao": "Palmeira nativa amazônica (açaí 'solteiro' por não perfilhar). Pouco invasiva em calçada; boa opção estética e cultural, mas sombra limitada."
+    },
+    {
+      "id": "cedro-rosa",
+      "nome_popular": ["Cedro-rosa", "Cedro-cheiroso", "Cedro"],
+      "nome_cientifico": "Cedrela fissilis",
+      "familia": "Meliaceae",
+      "origem": "nativa_brasil",
+      "porte": "grande",
+      "altura_adulta_m": [15, 30],
+      "diametro_copa_m": [10, 15],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [7, 10],
+      "anos_ate_porte_adulto": [25, 40],
+      "raiz": "pivotante",
+      "fruto": "capsula_media",
+      "contextos_adequados": ["parque", "praca", "calcada_larga"],
+      "restricoes": [
+        "vulnerável à broca-do-cedro (Hypsipyla grandella)",
+        "porte muito grande para calçada estreita ou média"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4"],
+      "observacao": "Madeira valiosa. Difícil manejo em pequena escala por conta da broca; melhor em plantio consorciado."
+    },
+    {
+      "id": "seringueira",
+      "nome_popular": ["Seringueira", "Árvore-da-borracha"],
+      "nome_cientifico": "Hevea brasiliensis",
+      "familia": "Euphorbiaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "grande",
+      "altura_adulta_m": [20, 35],
+      "diametro_copa_m": [10, 15],
+      "crescimento": "rapido",
+      "anos_ate_porte_util_sombra": [5, 8],
+      "anos_ate_porte_adulto": [20, 35],
+      "raiz": "pivotante",
+      "fruto": "capsula_explode",
+      "contextos_adequados": ["parque", "praca", "calcada_larga"],
+      "restricoes": [
+        "cápsula seca estoura e lança sementes a distância — evitar perto de janelas e carros",
+        "látex pode causar reação em sensibilizados"
+      ],
+      "status_rb": {
+        "imune_ao_corte_semeia_nt005_2023": true,
+        "incluida_em_obra_publica_rb": "estrada do aeroporto (2023)"
+      },
+      "fontes": ["embrapa_arbopasto_cap4", "semeia_nt_005_2023", "obra_estrada_aeroporto_2023"],
+      "observacao": "Imune ao corte em RB. Marca histórica da Amazônia (ciclo da borracha). Explosão de cápsulas em verão exige cuidado de posicionamento."
+    },
+    {
+      "id": "pintadinho",
+      "nome_popular": ["Pintadinho", "Peroba-mica"],
+      "nome_cientifico": "Aspidosperma ulei",
+      "familia": "Apocynaceae",
+      "origem": "nativa_amazonia_ocidental",
+      "porte": "medio_grande",
+      "altura_adulta_m": [12, 20],
+      "diametro_copa_m": [7, 10],
+      "crescimento": "lento_medio",
+      "anos_ate_porte_util_sombra": [8, 12],
+      "anos_ate_porte_adulto": [25, 40],
+      "raiz": "pivotante",
+      "fruto": "folículo_pequeno",
+      "ornamental": "casca com manchas acinzentadas (líquens) — origem do nome popular",
+      "contextos_adequados": ["praca", "parque", "canteiro_central", "calcada_larga"],
+      "restricoes": ["madeira dura — difícil poda após desenvolvimento"],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["embrapa_arbopasto_cap4"],
+      "observacao": "Nativa amazônica, nome popular pela casca pintada por líquens."
+    },
+    {
+      "id": "pata-de-vaca",
+      "nome_popular": ["Pata-de-vaca", "Mororó", "Unha-de-vaca"],
+      "nome_cientifico": "Bauhinia variegata",
+      "familia": "Fabaceae",
+      "origem": "exotica",
+      "pais_origem": "Ásia (Índia, China)",
+      "porte": "pequeno_medio",
+      "altura_adulta_m": [5, 10],
+      "diametro_copa_m": [4, 7],
+      "crescimento": "rapido",
+      "anos_ate_porte_util_sombra": [3, 5],
+      "anos_ate_porte_adulto": [10, 15],
+      "raiz": "pivotante",
+      "fruto": "vagem_pequena",
+      "flor_ornamental": "flor grande rosa ou branca o ano todo",
+      "contextos_adequados": ["calcada_media", "canteiro_central", "praca", "quintal_residencial"],
+      "restricoes": [
+        "exótica — recomendação condicional ao não haver alternativa nativa de mesmo porte",
+        "sementes podem germinar espontaneamente em áreas verdes"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["revsbau_2010"],
+      "observacao": "Pequena, boa pra calçadas de 2–4 m, floração atraente. Exótica — preferir nativas de porte similar quando possível."
+    },
+    {
+      "id": "oiti",
+      "nome_popular": ["Oiti", "Oitizeiro"],
+      "nome_cientifico": "Licania tomentosa",
+      "familia": "Chrysobalanaceae",
+      "origem": "nativa_brasil",
+      "porte": "medio_grande",
+      "altura_adulta_m": [8, 15],
+      "diametro_copa_m": [8, 12],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [5, 8],
+      "anos_ate_porte_adulto": [15, 25],
+      "raiz": "superficial_leve",
+      "fruto": "drupa_media_pouco_atrativa",
+      "contextos_adequados": ["calcada_media", "calcada_larga", "canteiro_central", "praca"],
+      "restricoes": [
+        "pode levantar levemente placas de calçada após 15+ anos",
+        "frutos secos caem em período curto"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true,
+        "citada_como_frequente_revsbau_2010": true
+      },
+      "fontes": ["revsbau_2010"],
+      "observacao": "Nativa da Mata Atlântica, mas é uma das espécies MAIS USADAS em arborização urbana em todo Brasil (incluindo Rio Branco, segundo REVSBAU 2010). Boa sombra densa, aceita podas, baixa manutenção."
+    },
+    {
+      "id": "falsa-murta",
+      "nome_popular": ["Falsa-murta", "Dama-da-noite", "Jasmim-laranja"],
+      "nome_cientifico": "Murraya paniculata",
+      "familia": "Rutaceae",
+      "origem": "exotica",
+      "pais_origem": "Ásia (sul e sudeste)",
+      "porte": "pequeno",
+      "altura_adulta_m": [3, 6],
+      "diametro_copa_m": [2, 4],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [3, 5],
+      "anos_ate_porte_adulto": [8, 12],
+      "raiz": "pivotante",
+      "fruto": "baga_pequena",
+      "flor_ornamental": "flor branca perfumada à noite, intermitente o ano todo",
+      "contextos_adequados": ["calcada_estreita", "canteiro_central", "quintal_residencial"],
+      "restricoes": [
+        "hospedeira do psilídeo-asiático-dos-citros (Diaphorina citri), vetor do greening (HLB) — EVITAR plantio em zonas com atividade citrícola comercial",
+        "exótica — baixa integração ecológica com fauna nativa"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true,
+        "citada_como_mais_frequente_revsbau_2010": true
+      },
+      "fontes": ["revsbau_2010"],
+      "observacao": "Uma das mais plantadas em Rio Branco segundo o inventário REVSBAU 2010. Pequena, cabe em calçada estreita, floração perfumada. Porém: hospeda vetor do greening dos citros e é exótica — avaliar substituição por nativas de porte similar em novos plantios."
+    },
+    {
+      "id": "mangueira",
+      "nome_popular": ["Mangueira", "Manga"],
+      "nome_cientifico": "Mangifera indica",
+      "familia": "Anacardiaceae",
+      "origem": "exotica",
+      "pais_origem": "Ásia (Índia)",
+      "porte": "grande",
+      "altura_adulta_m": [15, 30],
+      "diametro_copa_m": [12, 20],
+      "crescimento": "medio",
+      "anos_ate_porte_util_sombra": [5, 8],
+      "anos_ate_porte_adulto": [15, 25],
+      "raiz": "pivotante",
+      "fruto": "drupa_grande_pesada",
+      "contextos_adequados": ["praca", "parque", "quintal_residencial", "calcada_larga"],
+      "restricoes": [
+        "fruto pesado (200 g a 1 kg) pode causar lesão em pedestres e dano a veículos — EVITAR em calçada ou estacionamento",
+        "exótica, apesar de uso cultural consolidado no Norte"
+      ],
+      "status_rb": {
+        "documentada_em_uso_rb": true,
+        "uso_cultural_tradicional_norte": true
+      },
+      "fontes": ["revsbau_2010"],
+      "observacao": "Muito plantada em quintais no Norte do Brasil. Em espaço público, restringir a praças/parques com recuo. Fruto consumido pela população (coleta urbana comum)."
+    },
+    {
+      "id": "ficus-benjamina",
+      "nome_popular": ["Fícus", "Fícus-benjamim"],
+      "nome_cientifico": "Ficus benjamina",
+      "familia": "Moraceae",
+      "origem": "exotica",
+      "pais_origem": "Ásia (Índia, sudeste asiático)",
+      "porte": "grande",
+      "altura_adulta_m": [10, 20],
+      "diametro_copa_m": [10, 20],
+      "crescimento": "rapido",
+      "anos_ate_porte_util_sombra": [4, 7],
+      "anos_ate_porte_adulto": [15, 25],
+      "raiz": "superficial_agressiva",
+      "fruto": "sicônio_pequeno",
+      "contextos_adequados": ["parque"],
+      "restricoes": [
+        "RAÍZES EXTREMAMENTE AGRESSIVAS — destroem calçadas, muros e tubulações; não plantar em via urbana",
+        "exótica, invasora em alguns contextos"
+      ],
+      "recomendado": false,
+      "status_rb": {
+        "documentada_em_uso_rb": true
+      },
+      "fontes": ["revsbau_2010"],
+      "observacao": "Listada APENAS para documentar que foi plantada em Rio Branco historicamente e NÃO deve ser replantada em vias ou calçadas. Danos típicos à infraestrutura urbana após 10+ anos."
+    }
+  ]
+}
