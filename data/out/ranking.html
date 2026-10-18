@@ -69,6 +69,7 @@
   .detail dd{margin:0;font-size:13px;color:var(--text)}
   .detail dd .obs{color:var(--text-muted);font-size:12px}
   .empty{text-align:center;padding:36px;color:var(--text-faint);font-style:italic}
+  .thermo{display:inline-block;vertical-align:-0.1em;margin-right:3px;color:var(--nivel-alta);opacity:.85}
   @media (max-width:720px){
     thead th:nth-child(3),tbody td:nth-child(3){display:none}
     thead th:nth-child(6),tbody td:nth-child(6){display:none}
@@ -126,6 +127,7 @@
 const NUM_COLS = new Set(['rank','indice_prioridade','lst_mean','lst_percentile_90','anomalia_calor','ndvi_atual_mean','ndvi_delta','perda_ha','perda_pct','area_ha','cobertura_calor']);
 
 const fmtNum = (n, d=1) => n==null || !isFinite(n) ? '—' : Number(n).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
+const THERMO = '<svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>';
 const nivelKey = v => v==null ? null : v>=85 ? 'critica' : v>=55 ? 'alta' : v>=25 ? 'media' : 'baixa';
 const nivelLabel = v => ({critica:'crítica', alta:'alta', media:'média', baixa:'baixa'})[nivelKey(v)] || '—';
 
@@ -145,7 +147,7 @@ const COLS = [
     if (v==null) return '—';
     return `${fmtNum(v)}<span class="nivel ${nivelKey(v)}">${nivelLabel(v)}</span>`;
   }},
-  {k:'lst_mean', l:'°C médio', align:'r', fmt:v=>fmtNum(v)},
+  {k:'lst_mean', l:'<svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>°C médio', align:'r', fmt:v=>fmtNum(v)},
   {k:'anomalia_calor', l:'Anomalia', align:'r', fmt:v=>v==null?'—':(v>0?'+':'')+fmtNum(v)},
   {k:'ndvi_atual_mean', l:'Vegetação', align:'r', fmt:v=>fmtNum(v,2)},
   {k:'perda_pct', l:'% perdida', align:'r', fmt:v=>v==null?'—':fmtNum(v,0)+'%'},
@@ -270,8 +272,8 @@ function toggleDetail(tr, r){
 
   const anom = r.anomalia_calor;
   const anomTxt = anom==null ? '—'
-    : anom>0 ? `${fmtNum(anom)} °C acima da média da cidade`
-             : `${fmtNum(Math.abs(anom))} °C abaixo da média da cidade`;
+    : anom>0 ? `${THERMO}${fmtNum(anom)} °C acima da média da cidade`
+             : `${THERMO}${fmtNum(Math.abs(anom))} °C abaixo da média da cidade`;
   const ndviDelta = r.ndvi_delta==null ? '—'
     : (r.ndvi_delta>0?'+':'') + fmtNum(r.ndvi_delta, 2);
   const posicao = r.rank ? `${r.rank}º` : 'fora do ranking confiável';
@@ -283,8 +285,8 @@ function toggleDetail(tr, r){
     <div><dt>Código IBGE</dt><dd>${r.nome ?? '—'}</dd></div>
     <div><dt>Posição na fila</dt><dd>${posicao}</dd></div>
     <div><dt>Prioridade</dt><dd>${fmtNum(r.indice_prioridade)} de 100 <span class="obs">(${nivel})</span></dd></div>
-    <div><dt>Temperatura do chão (média)</dt><dd>${fmtNum(r.lst_mean)} °C <span class="obs">(${anomTxt})</span></dd></div>
-    <div><dt>Temperatura do chão (top 10% do setor)</dt><dd>${fmtNum(r.lst_percentile_90)} °C <span class="obs">(p90)</span></dd></div>
+    <div><dt>Temperatura do chão (média)</dt><dd>${THERMO}${fmtNum(r.lst_mean)} °C <span class="obs">(${anomTxt})</span></dd></div>
+    <div><dt>Temperatura do chão (top 10% do setor)</dt><dd>${THERMO}${fmtNum(r.lst_percentile_90)} °C <span class="obs">(p90)</span></dd></div>
     <div><dt>Vegetação (índice NDVI)</dt><dd>${fmtNum(r.ndvi_atual_mean,2)} <span class="obs">(variação ${ndviDelta} desde 2019)</span></dd></div>
     <div><dt>Vegetação perdida</dt><dd>${fmtNum(r.perda_ha,2)} ha <span class="obs">(${fmtNum(r.perda_pct,0)}% do setor)</span></dd></div>
     <div><dt>Área do setor</dt><dd>${fmtNum(r.area_ha,1)} ha</dd></div>

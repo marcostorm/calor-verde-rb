@@ -22,6 +22,10 @@
     --text-faint:#889590;
     --accent:#2d5a3d;
     --accent-soft:#6b8e5a;
+    --nivel-baixa:#feb24c;
+    --nivel-media:#fd8d3c;
+    --nivel-alta:#fc4e2a;
+    --nivel-critica:#b10026;
   }
   html,body{margin:0;height:100%;font-family:var(--sans);color:var(--text);background:var(--bg-page)}
   #map{position:absolute;inset:0 380px 0 0;background:#e5ebdc}
@@ -57,6 +61,17 @@
   button:active{background:var(--border-strong);color:#fff}
   .kv-group-title{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--text);margin:14px 0 2px}
   .footnote{font-size:11px;color:var(--text-faint);margin-top:12px;font-style:italic;line-height:1.4}
+  .poi-group{margin-top:16px}
+  .poi-group-title{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--text);margin:0 0 10px}
+  .poi-row{margin-bottom:10px}
+  .poi-row:last-child{margin-bottom:0}
+  .poi-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;margin-bottom:4px}
+  .poi-label{color:var(--text-muted);cursor:help;border-bottom:1px dotted var(--text-faint)}
+  .poi-value{font-variant-numeric:tabular-nums;color:var(--text)}
+  .poi-value b{font-weight:600}
+  .poi-bar{height:5px;background:var(--bg-strong);border-radius:3px;overflow:hidden}
+  .poi-bar-fill{height:100%;border-radius:3px;transition:width .3s ease}
+  .thermo{display:inline-block;vertical-align:-0.1em;margin-right:3px;color:var(--nivel-alta);opacity:.85}
   a{color:var(--accent)}
   .export{display:flex;gap:8px;align-items:center;margin:12px 0 16px}
   .export .meta{color:var(--text-faint);font-size:11px;margin-left:auto;font-style:italic}
@@ -128,7 +143,7 @@
   </div>
 
   <h2 id="top-title">Os 10 setores mais críticos</h2>
-  <table id="top"><thead><tr><td><b>#</b></td><td><b>setor</b></td><td><b>bairro</b></td><td class="r"><b>nota</b></td><td class="r"><b>°C</b></td></tr></thead><tbody></tbody></table>
+  <table id="top"><thead><tr><td><b>#</b></td><td><b>setor</b></td><td><b>bairro</b></td><td class="r"><b>nota</b></td><td class="r"><b><svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>°C</b></td></tr></thead><tbody></tbody></table>
 
   <details>
     <summary>Glossário</summary>
@@ -231,7 +246,7 @@ const LEGEND_SPECS = {
     bins: [[0,'baixa (<10)'],[10,'10–25'],[25,'25–40 (média)'],[40,'40–55'],[55,'55–70 (alta)'],[70,'70–85'],[85,'crítica (≥85)']]
   },
   lst: {
-    title: 'Temperatura do chão (°C)',
+    title: THERMO + 'Temperatura do chão (°C)',
     bins: [[0,'<28'],[28,'28–32'],[32,'32–36 (média da cidade)'],[36,'36–40 (zona de calor extremo)'],[40,'40–44'],[44,'44–48'],[48,'≥48']]
   }
 };
@@ -250,7 +265,13 @@ const TOOLTIPS = {
 };
 const VER_LABEL = { conservador: 'confiável', amplo: 'mapa inteiro' };
 const NIVEL = v => v==null ? '—' : v>=85 ? 'crítica' : v>=55 ? 'alta' : v>=25 ? 'média' : 'baixa';
+const NIVEL_COLOR = v => v==null ? 'var(--border-strong)'
+  : v>=85 ? 'var(--nivel-critica)'
+  : v>=55 ? 'var(--nivel-alta)'
+  : v>=25 ? 'var(--nivel-media)'
+  : 'var(--nivel-baixa)';
 const fmtNum = (n, d=1) => n==null ? '—' : Number(n).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
+const THERMO = '<svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>';
 
 function pop(f){
   const p = f.properties;
@@ -262,15 +283,15 @@ function pop(f){
     : '<i>fora do ranking confiável</i>';
   const anom = p.anomalia_calor;
   const anomTxt = anom==null ? ''
-    : anom>0 ? ` (${fmtNum(anom)} °C acima da média da cidade)`
-             : ` (${fmtNum(Math.abs(anom))} °C abaixo da média da cidade)`;
+    : anom>0 ? ` (${THERMO}${fmtNum(anom)} °C acima da média da cidade)`
+             : ` (${THERMO}${fmtNum(Math.abs(anom))} °C abaixo da média da cidade)`;
   const ndvi = fmtNum(p.ndvi_atual_mean, 2);
   const ndviDelta = p.ndvi_delta==null ? '—'
     : (p.ndvi_delta>0?'+':'') + fmtNum(p.ndvi_delta, 2);
   return `<b>Setor ${setor}${nomeBairro}</b>${tag}<br>
     ${posicao}<br>
     <b>Prioridade</b>: ${fmtNum(p.indice_prioridade)} de 100 (${NIVEL(p.indice_prioridade)})<br>
-    <b>Temperatura do chão</b>: ${fmtNum(p.lst_mean)} °C${anomTxt}<br>
+    <b>Temperatura do chão</b>: ${THERMO}${fmtNum(p.lst_mean)} °C${anomTxt}<br>
     <b>Vegetação</b>: índice ${ndvi} (variação ${ndviDelta} desde 2019)<br>
     <b>Vegetação perdida</b>: ${fmtNum(p.perda_ha, 2)} ha (${fmtNum(p.perda_pct, 0)}% do setor)<br>
     <b>Confiança do dado</b>: ${((p.cobertura_calor||0)*100).toFixed(0)}%`;
@@ -340,16 +361,29 @@ function loadResumo(ver){
     };
     const zq = s.pois_em_zona_quente || {};
     const tot = s.pois_total || {};
-    const fracao = (a, b) => `${a ?? 0} de ${b ?? 0}`;
+    const poiRow = (label, inZQ, total) => {
+      const tip = TOOLTIPS[label] ? `title="${TOOLTIPS[label]}"` : '';
+      const i = inZQ ?? 0, t = total ?? 0;
+      const pct = t > 0 ? Math.round(100 * i / t) : 0;
+      return `<div class="poi-row">
+        <div class="poi-head">
+          <span class="poi-label" ${tip}>${label}</span>
+          <span class="poi-value"><b>${i}</b> de ${t} · <b>${pct}%</b></span>
+        </div>
+        <div class="poi-bar"><div class="poi-bar-fill" style="width:${pct}%;background:${NIVEL_COLOR(pct)}"></div></div>
+      </div>`;
+    };
     document.getElementById('resumo').innerHTML =
       `<h2 style="margin-top:0">Rio Branco na seca de ${s.ano_atual}</h2>` +
-      kv('Temperatura do chão (média)', fmtNum(s.lst_media_cidade) + ' °C') +
-      kv('Zona de calor extremo (acima de)', fmtNum(s.lst_p75_cidade) + ' °C') +
+      kv('Temperatura do chão (média)', THERMO + fmtNum(s.lst_media_cidade) + ' °C') +
+      kv('Zona de calor extremo (acima de)', THERMO + fmtNum(s.lst_p75_cidade) + ' °C') +
       kv(`Vegetação perdida desde ${s.ano_base}`, fmtNum(s.perda_total_ha) + ' ha') +
-      '<div class="kv-group-title">Equipamentos públicos na zona de calor extremo</div>' +
-      kv('Escolas', fracao(zq.educacao, tot.educacao)) +
-      kv('Postos de saúde', fracao(zq.saude, tot.saude)) +
-      kv('Pontos de ônibus', fracao(zq.ponto_onibus, tot.ponto_onibus)) +
+      '<div class="poi-group">' +
+      '<div class="poi-group-title">Equipamentos públicos na zona de calor extremo</div>' +
+      poiRow('Escolas', zq.educacao, tot.educacao) +
+      poiRow('Postos de saúde', zq.saude, tot.saude) +
+      poiRow('Pontos de ônibus', zq.ponto_onibus, tot.ponto_onibus) +
+      '</div>' +
       `<div class="footnote">Medido entre junho e setembro de ${s.ano_atual} · comparação com ${s.ano_base}</div>`;
   });
 }
@@ -368,7 +402,7 @@ fetch('pois_calor.geojson').then(r=>r.json()).then(gj=>{
     const extremo = f.properties.zona_quente
       ? '<br><b>Dentro da zona de calor extremo</b>' : '';
     const m = mk(COL[cat])(lat,lng).bindPopup(
-      `<b>${f.properties.nome||'(sem nome)'}</b><br>${CAT_LABEL[cat] || cat}<br>Temperatura do chão aqui: ${fmtNum(lst)} °C${extremo}`);
+      `<b>${f.properties.nome||'(sem nome)'}</b><br>${CAT_LABEL[cat] || cat}<br>Temperatura do chão aqui: ${THERMO}${fmtNum(lst)} °C${extremo}`);
     byCat[cat].push(m);
   });
   edu = L.layerGroup(byCat.educacao).addTo(map);
@@ -442,8 +476,8 @@ function renderQA(){
   const metricsHtml = m ? `
     <div style="font-size:12px;line-height:1.5">
       <b>Cross-validation da interpolação</b> (seed ${m.params.seed}, N=${m.n_test}):<br>
-      MAE: <b>${m.mae_C} °C</b>&nbsp;·&nbsp;R²: ${m.r2}<br>
-      bias: ${m.bias_C} °C&nbsp;·&nbsp;erro p90: ${m.abserr_p90_C} °C<br>
+      MAE: <b>${THERMO}${m.mae_C} °C</b>&nbsp;·&nbsp;R²: ${m.r2}<br>
+      bias: ${THERMO}${m.bias_C} °C&nbsp;·&nbsp;erro p90: ${THERMO}${m.abserr_p90_C} °C<br>
       modo: ${m.params.modo}
     </div>` : '<i style="font-size:12px">qa_interpolacao.json não encontrado — rode scripts/qa_interpolacao.py</i>';
 
