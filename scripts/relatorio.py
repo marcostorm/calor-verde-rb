@@ -43,7 +43,8 @@ def read_ranking(out_dir):
     path = Path(out_dir) / "ranking_conservador.csv"
     if not path.exists():
         path = Path(out_dir) / "ranking.csv"
-    df = pd.read_csv(path)
+    # nome é código IBGE de 15 dígitos; força str pra bater com trends e geojson
+    df = pd.read_csv(path, dtype={"nome": str})
     return df
 
 
@@ -130,11 +131,11 @@ LEAF_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width=
 CSS = """
 @page { size: A4; margin: 24mm 18mm; @bottom-right { content: counter(page) " / " counter(pages); font-family: 'Nunito Sans', sans-serif; font-size: 9pt; color: #889590; } }
 @page :first { @bottom-right { content: ""; } }
-body { font-family: 'Nunito Sans', 'Helvetica', sans-serif; color: #1a2621; line-height: 1.55; font-size: 10pt; }
+body { font-family: 'Nunito Sans', 'Helvetica', sans-serif; color: #1a2621; line-height: 1.55; font-size: 10pt; widows: 1; orphans: 1; }
 h1 { font-family: 'Lora', 'Georgia', serif; font-weight: 700; font-size: 28pt; line-height: 1.15; letter-spacing: -0.01em; margin: 0 0 8pt; }
-h2 { font-family: 'Lora', serif; font-weight: 600; font-size: 16pt; margin: 24pt 0 8pt; color: #1a2621; }
-h3 { font-family: 'Lora', serif; font-weight: 600; font-size: 12pt; margin: 14pt 0 4pt; }
-p { margin: 0 0 8pt; }
+h2 { font-family: 'Lora', serif; font-weight: 600; font-size: 16pt; margin: 24pt 0 8pt; color: #1a2621; page-break-after: avoid; }
+h3 { font-family: 'Lora', serif; font-weight: 600; font-size: 12pt; margin: 14pt 0 4pt; page-break-after: avoid; }
+p { margin: 0 0 6pt; }
 .capa { page-break-after: always; display: flex; flex-direction: column; justify-content: center; min-height: 220mm; }
 .capa .selo { font-family: 'Nunito Sans', sans-serif; font-size: 10pt; color: #5a6b63; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20pt; }
 .capa h1 { font-size: 36pt; }
@@ -144,18 +145,23 @@ p { margin: 0 0 8pt; }
 .manchete .label { font-family: 'Nunito Sans', sans-serif; font-size: 11pt; color: #1a2621; margin-top: 6pt; }
 .capa .meta { font-size: 10pt; color: #5a6b63; margin-top: auto; padding-top: 20pt; border-top: 1px solid #c4cfb0; }
 .capa .meta b { color: #1a2621; font-weight: 600; }
-.sumario ul { padding-left: 0; list-style: none; }
-.sumario li { padding: 8pt 0; border-bottom: 1px solid #c4cfb0; display: flex; gap: 16pt; align-items: baseline; }
-.sumario li .valor { font-family: 'Lora', serif; font-weight: 700; font-size: 20pt; color: #2d5a3d; min-width: 100pt; font-variant-numeric: tabular-nums; }
-.sumario li .texto { flex: 1; font-size: 10pt; color: #1a2621; }
-.mapa { page-break-before: always; }
-.mapa img { width: 100%; max-height: 180mm; object-fit: contain; }
-.mapa .legenda { display: flex; gap: 12pt; margin-top: 8pt; font-size: 8pt; color: #5a6b63; justify-content: center; flex-wrap: wrap; }
+.sumario ul { padding-left: 0; list-style: none; margin: 0; }
+.sumario li { padding: 5pt 0; border-bottom: 1px solid #c4cfb0; display: flex; gap: 14pt; align-items: baseline; }
+.sumario li .valor { font-family: 'Lora', serif; font-weight: 700; font-size: 17pt; color: #2d5a3d; min-width: 90pt; font-variant-numeric: tabular-nums; }
+.sumario li .texto { flex: 1; font-size: 9.5pt; color: #1a2621; line-height: 1.4; }
+.mapa { margin: 6pt 0 10pt; }
+.mapa img { width: 100%; max-height: 160mm; object-fit: contain; display: block; }
+.mapa-compact img { max-height: 125mm; }
+.pg-mapa { page-break-before: always; }
+.pg-mapa h2 { margin-top: 0; }
+.tabela-pequena { page-break-inside: avoid; }
+.mapa .legenda { display: flex; gap: 12pt; margin-top: 4pt; font-size: 8pt; color: #5a6b63; justify-content: center; flex-wrap: wrap; }
 .mapa .legenda span { display: inline-flex; align-items: center; gap: 4pt; }
 .mapa .legenda i { width: 10pt; height: 10pt; display: inline-block; border: 0.5pt solid rgba(0,0,0,0.2); }
-table { width: 100%; border-collapse: collapse; margin: 10pt 0 16pt; font-size: 9pt; page-break-inside: avoid; }
+table { width: 100%; border-collapse: collapse; margin: 10pt 0 16pt; font-size: 9pt; }
 th, td { padding: 6pt 8pt; text-align: left; border-bottom: 1px solid #c4cfb0; }
 tr { page-break-inside: avoid; }
+thead { display: table-header-group; }
 th { background: #e3ead8; font-family: 'Nunito Sans', sans-serif; font-weight: 600; color: #1a2621; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.03em; }
 td.r { text-align: right; font-variant-numeric: tabular-nums; }
 tr:nth-child(even) { background: #f7f9f4; }
@@ -169,7 +175,7 @@ tr:nth-child(even) { background: #f7f9f4; }
 .limitacoes { background: #f7f9f4; border-left: 3px solid #a8b593; padding: 12pt 16pt; margin: 12pt 0; font-size: 9pt; line-height: 1.5; }
 .limitacoes h3 { margin-top: 0; }
 .limitacoes ul { margin: 6pt 0 0; padding-left: 16pt; }
-.ref { font-size: 9pt; color: #5a6b63; margin-top: 20pt; padding-top: 10pt; border-top: 1px solid #c4cfb0; }
+.ref { font-size: 8.5pt; color: #5a6b63; margin-top: 8pt; padding-top: 5pt; border-top: 1px solid #c4cfb0; }
 .ref a { color: #2d5a3d; text-decoration: none; }
 .secao-num { font-size: 9pt; color: #889590; text-transform: uppercase; letter-spacing: 0.1em; }
 """
@@ -251,14 +257,19 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
     secao_delta = ""
     if tem_tendencia and mapa_delta_png:
         secao_delta = f"""
-        <h2>Mapa de variação {C.YEAR_NOW-1}→{C.YEAR_NOW}</h2>
-        <p>Choropleth divergente da variação de temperatura da superfície entre as duas estações secas. Vermelho = esquentou; azul = esfriou.</p>
-        <div class="mapa"><img src="{embed_image(mapa_delta_png)}" alt="Mapa de variação"></div>
-        <h3>Setores que mais esquentaram</h3>
-        <table>
-          <thead><tr><th>Bairro</th><th class="r">LST {C.YEAR_NOW-1}</th><th class="r">LST {C.YEAR_NOW}</th><th class="r">Variação</th></tr></thead>
-          <tbody>{top_esquentou_html}</tbody>
-        </table>
+<section class="pg-mapa">
+  <div class="secao-num">04 · Variação de temperatura</div>
+  <h2>Mapa de variação {C.YEAR_NOW-1}→{C.YEAR_NOW}</h2>
+  <p>Choropleth divergente da variação de temperatura da superfície entre as duas estações secas. Vermelho = esquentou; azul = esfriou.</p>
+  <div class="mapa mapa-compact"><img src="{embed_image(mapa_delta_png)}" alt="Mapa de variação"></div>
+  <div class="tabela-pequena">
+  <h3>Setores que mais esquentaram</h3>
+  <table>
+    <thead><tr><th>Bairro</th><th class="r">LST {C.YEAR_NOW-1}</th><th class="r">LST {C.YEAR_NOW}</th><th class="r">Variação</th></tr></thead>
+    <tbody>{top_esquentou_html}</tbody>
+  </table>
+  </div>
+</section>
         """
 
     stats_sumario = []
@@ -306,21 +317,7 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
 </section>
 
 <section>
-  <div class="secao-num">02 · Mapa da cidade</div>
-  <h2>Prioridade de plantio</h2>
-  <p>Cada polígono é um setor censitário do IBGE. A cor combina temperatura da superfície (peso 50%), falta de vegetação (30%) e perda vegetacional desde {C.YEAR_BASE} (20%). Vermelho vinho = plantio crítico; amarelo claro = baixa prioridade.</p>
-  <div class="mapa"><img src="{embed_image(mapa_pri_png)}" alt="Mapa de prioridade"></div>
-  <div class="legenda">
-    <span><i style="background:#ffffb2"></i>baixa</span>
-    <span><i style="background:#feb24c"></i>média</span>
-    <span><i style="background:#fc4e2a"></i>alta</span>
-    <span><i style="background:#b10026"></i>crítica</span>
-    <span><i style="background:white;border:1px dashed #b8860b"></i>estimado por buffer</span>
-  </div>
-</section>
-
-<section>
-  <div class="secao-num">03 · Os dez setores mais críticos</div>
+  <div class="secao-num">02 · Os dez setores mais críticos</div>
   <h2>Onde plantar primeiro</h2>
   <p>Classificação pela nota de prioridade. &quot;Setor&quot; mostra os três últimos dígitos do código IBGE. &quot;Variação&quot; compara a temperatura da superfície com a de {C.YEAR_NOW-1}.</p>
   <table>
@@ -332,6 +329,20 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
     </tr></thead>
     <tbody>{top10_html}</tbody>
   </table>
+</section>
+
+<section class="pg-mapa">
+  <div class="secao-num">03 · Mapa da cidade</div>
+  <h2>Prioridade de plantio</h2>
+  <p>Cada polígono é um setor censitário do IBGE. A cor combina temperatura da superfície (peso 50%), falta de vegetação (30%) e perda vegetacional desde {C.YEAR_BASE} (20%). Vermelho vinho = plantio crítico; amarelo claro = baixa prioridade.</p>
+  <div class="mapa"><img src="{embed_image(mapa_pri_png)}" alt="Mapa de prioridade"></div>
+  <div class="legenda">
+    <span><i style="background:#ffffb2"></i>baixa</span>
+    <span><i style="background:#feb24c"></i>média</span>
+    <span><i style="background:#fc4e2a"></i>alta</span>
+    <span><i style="background:#b10026"></i>crítica</span>
+    <span><i style="background:white;border:1px dashed #b8860b"></i>estimado por buffer</span>
+  </div>
 </section>
 
 {secao_delta}
@@ -358,14 +369,10 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
 <section>
   <div class="secao-num">06 · Reproduzir e citar</div>
   <h2>Como usar este relatório</h2>
-  <p><b>Reproduzir</b>: <code>git clone github.com/marcostorm/calor-verde-rb &amp;&amp; make rodar</code> (requer Python 3.12 + conta Google Earth Engine).</p>
-  <p><b>Metodologia completa</b>: <a href="https://marcostorm.github.io/calor-verde-rb/metodo.html">marcostorm.github.io/calor-verde-rb/metodo.html</a></p>
-  <p><b>Mapa interativo</b>: <a href="https://marcostorm.github.io/calor-verde-rb/">marcostorm.github.io/calor-verde-rb</a></p>
-  <p><b>Dados brutos</b>: <code>snapshots/{C.YEAR_NOW}/</code> no repositório.</p>
+  <p><b>Mapa interativo e lista completa</b>: <a href="https://marcostorm.github.io/calor-verde-rb/">marcostorm.github.io/calor-verde-rb</a> · <b>metodologia completa</b>: <a href="https://marcostorm.github.io/calor-verde-rb/metodo.html">/metodo.html</a> · <b>reprodução</b>: <code>git clone github.com/marcostorm/calor-verde-rb</code> (requer Python 3.12 + GEE) · <b>dados brutos</b>: <code>snapshots/{C.YEAR_NOW}/</code> no repositório.</p>
   <p><b>Como citar</b> (ABNT): ARAÚJO, M. H. M. <i>Calor &amp; Verde — Rio Branco</i>: diagnóstico por satélite da prioridade de plantio na estação seca de {C.YEAR_NOW}. Rio Branco: Storm Lab, {C.YEAR_NOW}. Disponível em: &lt;https://marcostorm.github.io/calor-verde-rb/&gt;. Acesso em: {hoje.strftime('%d/%m/%Y')}.</p>
   <div class="ref">
-    Licença dos dados derivados: CC BY 4.0. Código: ver repositório.<br>
-    Projeto independente, não institucional. Dúvidas e correções: via issues no GitHub.
+    Licença dos dados derivados: CC BY 4.0 · Código: ver repositório · Projeto independente, não institucional · Dúvidas e correções: via issues no GitHub.
   </div>
 </section>
 
