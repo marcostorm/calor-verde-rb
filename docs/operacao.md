@@ -138,6 +138,36 @@ Flags úteis:
 - `--col lst_percentile_90` segue outra coluna (default: `lst_mean`)
 - `--snapshots dir` e `--out dir` para rodar fora dos defaults
 
+## Gerar relatório PDF (`scripts/relatorio.py`)
+
+Depois de qualquer rodada do `analyze.py` (e opcionalmente do `trends.py`),
+gera um PDF estático de 6-7 páginas com capa, sumário em 5 números, mapa de
+prioridade, top-10 setores, mapa de variação ano a ano, metodologia e
+limitações.
+
+```bash
+.venv/bin/python scripts/relatorio.py
+```
+
+Grava em `relatorios/calor-verde-rb_YYYY-MM-DD.pdf`. Lê automaticamente:
+- `data/out/resumo_conservador.json` (ou `resumo.json`)
+- `data/out/ranking_conservador.csv` (ou `ranking.csv`)
+- `data/out/trends/setor_lst.csv` se existir (habilita manchete "+Δ°C"
+  e segunda página de mapa divergente)
+
+Flags úteis:
+
+- `--saida path.pdf` sobrescreve o caminho default
+- `--out-dir dir` lê outputs de outro diretório
+
+Pré-requisito: `pip install -r requirements.txt` traz `weasyprint` e
+`matplotlib`. Pango + Cairo (runtime, não dev) já vem com Ubuntu desktop
+padrão; em servidor headless pode precisar `apt install libpango-1.0-0
+libpangoft2-1.0-0`.
+
+Rodar após congelar um snapshot anual pra ter um relatório datado por
+versão: `cp relatorios/calor-verde-rb_YYYY-MM-DD.pdf snapshots/YYYY/`.
+
 ## Atualizar dependências
 
 As versões em `requirements.txt` estão pinadas. Para atualizar com segurança:

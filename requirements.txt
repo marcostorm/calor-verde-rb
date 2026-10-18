@@ -7,3 +7,7 @@ rasterstats==0.21.0
 numpy==2.5.3
 pandas==3.0.6
 requests==2.34.2
+# Relatório PDF (scripts/relatorio.py). Pango + Cairo runtime: pacotes padrão
+# em Ubuntu desktop; não precisa de -dev.
+weasyprint==70.0
+matplotlib==3.11.2
