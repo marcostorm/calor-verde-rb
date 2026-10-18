@@ -248,7 +248,7 @@
 <script>
 const map = L.map('map').setView([-9.97, -67.81], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  {attribution:'© OpenStreetMap', maxZoom:19}).addTo(map);
+  {attribution:'© OpenStreetMap', maxZoom:19, crossOrigin:true}).addTo(map);
 
 // Reajusta tiles quando o layout muda (rotação de celular, redimensionamento).
 window.addEventListener('resize', () => map.invalidateSize());
@@ -608,8 +608,9 @@ document.getElementById('btn-png').onclick = async () => {
     document.body.classList.add('exporting');
     // Yield pro layout aplicar `.exporting` antes do snapshot
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    const url = await window.modernScreenshot.domToPng(document.getElementById('side'), {
+    const url = await window.modernScreenshot.domToPng(document.body, {
       scale: 2, backgroundColor: '#eef2eb',
+      width: window.innerWidth, height: window.innerHeight,
     });
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0,10);
