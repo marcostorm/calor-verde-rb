@@ -32,7 +32,7 @@
   #map{position:absolute;inset:0 380px 0 0;background:#e5ebdc}
   .leaflet-tile-pane{filter:grayscale(.65) brightness(1.08) contrast(.92)}
   #side{position:absolute;top:0;right:0;bottom:0;width:380px;overflow:auto;padding:20px 18px;background:var(--bg-page);border-left:1px solid var(--border-soft);box-sizing:border-box;font-size:14px;line-height:1.45}
-  #side::before{content:'';position:absolute;inset:0;background:url('img/leaf.svg') repeat;background-size:70px;mix-blend-mode:multiply;opacity:.10;pointer-events:none;z-index:0}
+  #side::before{content:'';position:absolute;inset:0;background:url('img/leaf.svg') repeat;background-size:48px;mix-blend-mode:multiply;opacity:.05;pointer-events:none;z-index:0}
   body.exporting #side::before{display:none}
   #side > *{position:relative;z-index:1}
   h1 .brand-leaf{width:28px;height:28px;vertical-align:-6px;margin-right:8px}
@@ -110,6 +110,7 @@
   .print-header{display:none}
   body.exporting .ver, body.exporting .toggle, body.exporting .export,
   body.exporting #camadas-controls, body.exporting #camadas-title { display:none !important }
+  body.exporting #side > h1, body.exporting #side > .sub { display:none !important }
   body.exporting .print-header { display:block; border-bottom:1px solid var(--border-strong); padding-bottom:8px; margin-bottom:12px }
   body.exporting .pill { display:none }
   @media (max-width: 768px) {
