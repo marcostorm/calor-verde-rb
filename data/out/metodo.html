@@ -76,7 +76,7 @@
 <header>
   <a href="./" class="back">← Voltar ao mapa</a>
   <h1><img class="brand-leaf" src="img/leaf.svg" alt="">O método em uma página</h1>
-  <p class="lede">Como o estudo <em>Calor &amp; Verde</em> identifica onde Rio Branco deveria plantar árvores primeiro — e por quê a resposta não é "o lugar mais quente".</p>
+  <p class="lede">Como o estudo <em>Calor &amp; Verde</em> identifica onde Rio Branco deveria plantar árvores primeiro, e por que a resposta não é "o lugar mais quente".</p>
 </header>
 
 <p>Rio Branco está no coração da Amazônia. Mas, dentro da cidade, o verde não se distribui por igual: alguns bairros têm sombra, outros têm asfalto e telhado puro. O estudo mede essa diferença bairro a bairro e ordena por prioridade de plantio.</p>
@@ -85,7 +85,7 @@
 
 <span class="section-num">01 · O problema</span>
 <h2>Por que faltar árvore importa</h2>
-<p>Em uma cidade, cada árvore é um aparelho de resfriamento gratuito: faz sombra no chão, no telhado e nas paredes; evapora água e diminui a temperatura do ar; filtra parte da poluição. Onde a cobertura cai, a superfície pode ficar <svg class="thermo" viewBox="0 0 10 16" width="9" height="13" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>10 °C mais quente que o entorno arborizado — e quem mora, estuda ou trabalha ali paga essa conta com saúde.</p>
+<p>Em uma cidade, cada árvore é um aparelho de resfriamento gratuito: faz sombra no chão, no telhado e nas paredes; evapora água e diminui a temperatura do ar; filtra parte da poluição. Onde a cobertura cai, a superfície pode ficar <svg class="thermo" viewBox="0 0 10 16" width="9" height="13" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>10 °C mais quente que o entorno arborizado. E quem mora, estuda ou trabalha ali paga essa conta com saúde.</p>
 <p>Rio Branco tem 669 setores censitários do IBGE 2022 (unidades menores que bairro). O estudo compara todos.</p>
 
 <span class="section-num">02 · Os três ingredientes</span>
@@ -94,12 +94,12 @@
   <div class="card">
     <h4>Calor</h4>
     <span class="weight">peso 50%</span>
-    <p>Temperatura da superfície (Landsat 8/9), estação seca jun–set. Mede o quanto o chão irradia — asfalto queima mais que mata.</p>
+    <p>Temperatura da superfície (Landsat 8/9), estação seca jun–set. Mede o quanto o chão irradia: asfalto queima mais que mata.</p>
   </div>
   <div class="card">
     <h4>Falta de verde</h4>
     <span class="weight">peso 30%</span>
-    <p>NDVI atual (Sentinel-2) — índice de vegetação. Quanto mais baixo, menos árvore/mato no setor.</p>
+    <p>NDVI atual (Sentinel-2), índice de vegetação. Quanto mais baixo, menos árvore/mato no setor.</p>
   </div>
   <div class="card">
     <h4>Perda recente</h4>
@@ -129,7 +129,7 @@
 <div class="scale-labels"><span>baixa prioridade</span><span>crítica</span></div>
 
 <h3>Setor com borda tracejada</h3>
-<p>Quando o Landsat teve nuvem demais sobre um setor, estimamos o LST usando os pixels dos setores vizinhos (dentro de 3,5 km, respeitando o contexto urbano/rural). Esses setores aparecem com borda tracejada dourada no mapa — pra deixar explícito que o número é interpolado, não medido.</p>
+<p>Quando o Landsat teve nuvem demais sobre um setor, estimamos o LST usando os pixels dos setores vizinhos (dentro de 3,5 km, respeitando o contexto urbano/rural). Esses setores aparecem com borda tracejada dourada no mapa, pra deixar explícito que o número é interpolado, não medido.</p>
 
 <h3>Zona quente</h3>
 <p>Pixel ou ponto (escola, posto, parada) onde a temperatura da superfície está no quartil mais alto da cidade. É onde o estresse térmico é maior. O resumo da sidebar mostra quantas escolas, unidades de saúde e pontos de ônibus estão em zona quente.</p>
@@ -146,11 +146,11 @@
 <div class="limits">
   <h3>Limites a honrar antes de citar</h3>
   <ul>
-    <li><strong>Temperatura da superfície ≠ temperatura do ar.</strong> O Landsat mede o quanto o chão irradia; termômetro em sombra marca menos. Ainda assim, LST serve pra comparar áreas entre si — e a diferença que importa aqui é relativa.</li>
+    <li><strong>Temperatura da superfície ≠ temperatura do ar.</strong> O Landsat mede o quanto o chão irradia; termômetro em sombra marca menos. Ainda assim, LST serve pra comparar áreas entre si, e a diferença que importa aqui é relativa.</li>
     <li><strong>Nuvem persistente é a maior fonte de ruído.</strong> Mesmo com interpolação, 7% dos setores (os cinzas no mapa) ficaram sem dado em nenhuma versão. Zona rural distante é a mais afetada.</li>
     <li><strong>Bairros vêm do OpenStreetMap</strong>, não da prefeitura. Nomes podem repetir (há dois "Centro") e divisão é informal. O setor censitário IBGE é a unidade formal.</li>
-    <li><strong>O índice não considera densidade populacional.</strong> Setor com alta prioridade e pouca gente ainda importa (saúde pública individual), mas priorização política pode querer somar impacto demográfico — isso fica como filtro adicional, não entra na métrica base.</li>
-    <li><strong>Pesos são escolhas, não lei da natureza.</strong> 50/30/20 é defensável mas revisável — está documentado em <code>config.py</code> e pode ser rodado com outros valores. O código é aberto justamente pra permitir isso.</li>
+    <li><strong>O índice não considera densidade populacional.</strong> Setor com alta prioridade e pouca gente ainda importa (saúde pública individual), mas priorização política pode querer somar impacto demográfico. Isso fica como filtro adicional, não entra na métrica base.</li>
+    <li><strong>Pesos são escolhas, não lei da natureza.</strong> 50/30/20 é defensável mas revisável. Está documentado em <code>config.py</code> e pode ser rodado com outros valores. O código é aberto justamente pra permitir isso.</li>
   </ul>
 </div>
 
@@ -159,10 +159,10 @@
 <div class="refs">
 <dl>
   <dt>Documentação completa</dt>
-  <dd><a href="https://github.com/marcostorm/calor-verde-rb/tree/main/docs">docs/</a> no repositório — metodologia, operação, glossário, resultados por rodada e roadmap</dd>
+  <dd><a href="https://github.com/marcostorm/calor-verde-rb/tree/main/docs">docs/</a> no repositório: metodologia, operação, glossário, resultados por rodada e roadmap</dd>
 
   <dt>Código-fonte</dt>
-  <dd><a href="https://github.com/marcostorm/calor-verde-rb">github.com/marcostorm/calor-verde-rb</a> — Python, open source, reprodutível</dd>
+  <dd><a href="https://github.com/marcostorm/calor-verde-rb">github.com/marcostorm/calor-verde-rb</a>: Python, open source, reprodutível</dd>
 
   <dt>Dados-fonte</dt>
   <dd>Landsat 8/9 (NASA/USGS) via Google Earth Engine · Sentinel-2 (ESA) · setores censitários IBGE 2022 · bairros e POIs OpenStreetMap</dd>

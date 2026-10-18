@@ -147,14 +147,14 @@
   </div>
 
   <div class="export">
-    <button id="btn-pdf" title="Abre o diálogo de impressão — escolha 'Salvar como PDF'">Baixar PDF</button>
+    <button id="btn-pdf" title="Abre o diálogo de impressão. Escolha 'Salvar como PDF'">Baixar PDF</button>
     <button id="btn-png" title="Gera um PNG da sidebar atual (sem o mapa)">Baixar PNG</button>
     <a class="link" href="ranking.html">Lista completa</a>
   </div>
 
   <div class="ver">
     <b>Versão do mapa:</b><br>
-    <label><input type="radio" name="ver" value="conservador" checked> Só áreas com dado confiável — ao menos 50% do setor livre de nuvem</label>
+    <label><input type="radio" name="ver" value="conservador" checked> Só áreas com dado confiável (ao menos 50% do setor livre de nuvem)</label>
     <label><input type="radio" name="ver" value="amplo"> Mapa inteiro, incluindo áreas de dado fraco <span class="pill">+37 setores</span></label>
   </div>
 
@@ -186,7 +186,7 @@
       <dd>Índice de −1 a 1 derivado do Sentinel-2. Acima de 0,5: mata densa; perto de zero: solo exposto, telhado ou pavimento; abaixo de zero: corpo d'água.</dd>
 
       <dt>Vegetação perdida</dt>
-      <dd>Pixels que estavam vegetados em 2019 (índice ≥ 0,5) e tiveram queda de ao menos 0,2 pontos até 2026. Captura corte, queimada ou seca severa — não só desmatamento.</dd>
+      <dd>Pixels que estavam vegetados em 2019 (índice ≥ 0,5) e tiveram queda de ao menos 0,2 pontos até 2026. Captura corte, queimada ou seca severa, não só desmatamento.</dd>
 
       <dt>Zona de calor extremo</dt>
       <dd>Áreas onde o chão passa de 36,5 °C na estação seca. Esse limiar é o quartil superior da cidade: 25% das áreas urbanas estão acima dele.</dd>
@@ -198,10 +198,10 @@
       <dd>Fração do setor com pixels livres de nuvem e sombra nas imagens do Landsat. Abaixo de 50% o setor sai da versão "confiável" do ranking.</dd>
 
       <dt>Arborização na calçada (IBGE 2022)</dt>
-      <dd>Percentual de moradores do setor cuja casa fica em face de quadra com pelo menos uma árvore, segundo a Pesquisa Urbanística do Entorno dos Domicílios do Censo 2022. Complementa o NDVI do satélite com o que o IBGE viu em campo. Nem todo setor foi pesquisado — 87 setores de Rio Branco (sobretudo rurais) ficam sem valor.</dd>
+      <dd>Percentual de moradores do setor cuja casa fica em face de quadra com pelo menos uma árvore, segundo a Pesquisa Urbanística do Entorno dos Domicílios do Censo 2022. Complementa o NDVI do satélite com o que o IBGE viu em campo. Nem todo setor foi pesquisado: 87 setores de Rio Branco (sobretudo rurais) ficam sem valor.</dd>
 
       <dt>Setor censitário</dt>
-      <dd>Menor unidade do IBGE para o Censo — polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). Como o IBGE não oficializa divisão por bairros, o ranking é por setor; o bairro aparece como rótulo auxiliar.</dd>
+      <dd>Menor unidade do IBGE para o Censo: polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). Como o IBGE não oficializa divisão por bairros, o ranking é por setor; o bairro aparece como rótulo auxiliar.</dd>
 
       <dt>Estação seca</dt>
       <dd>Junho a setembro na Amazônia ocidental. É o período com menos nuvem (mais cenas de satélite aproveitáveis) e também o pico de calor de superfície.</dd>
@@ -292,7 +292,7 @@ let currentModo = 'prioridade';
 const TOOLTIPS = {
   'Temperatura do chão (média)': 'Média da temperatura de superfície (Landsat 8/9) na mancha urbana durante a estação seca',
   'Zona de calor extremo (acima de)': 'Quartil superior da cidade (p75): 25% das áreas urbanas estão acima deste limiar',
-  'Vegetação perdida': 'Hectares onde o NDVI caiu de ≥0,5 em 2019 para abaixo em 2026 — captura corte, queimada ou seca severa',
+  'Vegetação perdida': 'Hectares onde o NDVI caiu de ≥0,5 em 2019 para abaixo em 2026; captura corte, queimada ou seca severa',
   'Escolas': 'Escolas em pixels onde a temperatura do chão fica acima do limiar da zona de calor extremo',
   'Postos de saúde': 'Unidades de saúde na zona de calor extremo',
   'Pontos de ônibus': 'Pontos de ônibus na zona de calor extremo'
@@ -543,7 +543,7 @@ function renderQA(){
       MAE: <b>${THERMO}${m.mae_C} °C</b>&nbsp;·&nbsp;R²: ${m.r2}<br>
       bias: ${THERMO}${m.bias_C} °C&nbsp;·&nbsp;erro p90: ${THERMO}${m.abserr_p90_C} °C<br>
       modo: ${m.params.modo}
-    </div>` : '<i style="font-size:12px">qa_interpolacao.json não encontrado — rode scripts/qa_interpolacao.py</i>';
+    </div>` : '<i style="font-size:12px">qa_interpolacao.json não encontrado; rode scripts/qa_interpolacao.py</i>';
 
   const totalFeats = feats.length;
   const interp = feats.filter(f => f.properties.interpolado).length;
