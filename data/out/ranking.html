@@ -129,7 +129,7 @@
 </div>
 
 <script>
-const NUM_COLS = new Set(['rank','indice_prioridade','lst_mean','lst_percentile_90','anomalia_calor','ndvi_atual_mean','ndvi_delta','perda_ha','perda_pct','area_ha','cobertura_calor','pct_arborizacao']);
+const NUM_COLS = new Set(['rank','indice_prioridade','lst_mean','lst_percentile_90','anomalia_calor','ndvi_atual_mean','ndvi_delta','perda_ha','perda_pct','area_ha','cobertura_calor','pct_arborizacao','focos_estacao']);
 
 const fmtNum = (n, d=1) => n==null || !isFinite(n) ? '—' : Number(n).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
 const THERMO = '<svg class="thermo" viewBox="0 0 10 16" width="8" height="12" aria-hidden="true"><rect x="3.5" y="1.5" width="3" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="5" cy="12" r="2.2" fill="currentColor"/></svg>';
@@ -157,6 +157,7 @@ const COLS = [
   {k:'ndvi_atual_mean', l:'Vegetação', align:'r', fmt:v=>fmtNum(v,2)},
   {k:'perda_pct', l:'% perdida', align:'r', fmt:v=>v==null?'—':fmtNum(v,0)+'%'},
   {k:'pct_arborizacao', l:'Arborização', align:'r', fmt:v=>v==null?'—':fmtNum(v,0)+'%'},
+  {k:'focos_estacao', l:'Focos', align:'r', fmt:v=>v==null?'—':String(Math.round(v))},
   {k:'cobertura_calor', l:'Confiança', align:'r', fmt:v=>v==null?'—':(v*100).toFixed(0)+'%'},
 ];
 
@@ -296,6 +297,7 @@ function toggleDetail(tr, r){
     <div><dt>Vegetação (índice NDVI)</dt><dd>${fmtNum(r.ndvi_atual_mean,2)} <span class="obs">(variação ${ndviDelta} desde 2019)</span></dd></div>
     <div><dt>Vegetação perdida</dt><dd>${fmtNum(r.perda_ha,2)} ha <span class="obs">(${fmtNum(r.perda_pct,0)}% do setor)</span></dd></div>
     <div><dt>Arborização na calçada</dt><dd>${r.pct_arborizacao==null?'—':fmtNum(r.pct_arborizacao,0)+'% dos moradores'} <span class="obs">(IBGE 2022)</span></dd></div>
+    <div><dt>Focos de queimada (jun–set)</dt><dd>${r.focos_estacao==null?'—':Math.round(r.focos_estacao)} <span class="obs">(AQUA_M-T / INPE)</span></dd></div>
     <div><dt>Área do setor</dt><dd>${fmtNum(r.area_ha,1)} ha</dd></div>
     <div><dt>Confiança do dado</dt><dd>${r.cobertura_calor==null?'—':(r.cobertura_calor*100).toFixed(0)+'%'} <span class="obs">(pixels livres de nuvem/sombra)</span></dd></div>
     <div><dt>Origem dos dados</dt><dd>${r.interpolado?'estimado por buffer de 3,5 km (±2,3 °C)':'pixels próprios do setor'}</dd></div>
@@ -304,7 +306,7 @@ function toggleDetail(tr, r){
 }
 
 function toCSV(data){
-  const header = ['rank','codigo_ibge','setor_curto','bairro','prioridade','nivel','lst_mean_C','lst_p90_C','anomalia_C','ndvi_atual','ndvi_delta','perda_ha','perda_pct','arborizacao_pct','area_ha','cobertura_calor','estimado_por_buffer'];
+  const header = ['rank','codigo_ibge','setor_curto','bairro','prioridade','nivel','lst_mean_C','lst_p90_C','anomalia_C','ndvi_atual','ndvi_delta','perda_ha','perda_pct','arborizacao_pct','focos_estacao','area_ha','cobertura_calor','estimado_por_buffer'];
   const bodyRows = data.map(r => [
     r.rank ?? '',
     r.nome ?? '',
@@ -320,6 +322,7 @@ function toCSV(data){
     r.perda_ha ?? '',
     r.perda_pct ?? '',
     r.pct_arborizacao ?? '',
+    r.focos_estacao ?? '',
     r.area_ha ?? '',
     r.cobertura_calor ?? '',
     r.interpolado ? 'sim' : 'nao',

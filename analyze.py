@@ -5,6 +5,7 @@ Entradas:
   --unidades  GeoJSON/Shapefile/GPKG de setores censitários ou bairros (malha IBGE 2022)
   --dissolver coluna para agregar setores em bairros (ex.: NM_BAIRRO)
   --arborizacao CSV opcional com % de arborização do IBGE por unidade (--chave, --col-arbor)
+  --focos       CSV opcional de focos INPE (ver scripts/fetch_focos_inpe.py)
 
 Saídas em data/out/:
   unidades_prioridade.geojson  unidades com métricas e índice (EPSG:4326, pronto para o mapa)
@@ -468,6 +469,8 @@ def main():
     ap.add_argument("--arborizacao", help="CSV com % de arborização IBGE por unidade")
     ap.add_argument("--chave", default="nome", help="coluna de junção do CSV")
     ap.add_argument("--col-arbor", default="pct_arborizacao")
+    ap.add_argument("--focos", help="CSV de focos INPE (ver scripts/fetch_focos_inpe.py); "
+                                     "point-in-polygon conta focos por setor em focos_estacao")
     ap.add_argument("--min-cobertura", type=float, default=0.5,
                     help="fração mínima de pixels válidos de calor para a unidade entrar no ranking")
     ap.add_argument("--sem-pois", action="store_true")
@@ -561,6 +564,19 @@ def _run_pipeline(args, writer, recorder=None):
         gdf = gdf.merge(arb[[args.chave, args.col_arbor]], how="left",
                         left_on="nome", right_on=args.chave)
 
+    if args.focos:
+        focos_df = pd.read_csv(args.focos)
+        focos_gdf = gpd.GeoDataFrame(
+            focos_df,
+            geometry=gpd.points_from_xy(focos_df["lon"], focos_df["lat"]),
+            crs="EPSG:4326",
+        ).to_crs(gdf.crs)
+        joined = gpd.sjoin(focos_gdf, gdf[["geometry"]], how="left", predicate="within")
+        contagem = joined.groupby("index_right").size()
+        gdf["focos_estacao"] = gdf.index.map(contagem).fillna(0).astype(int)
+        logger.info("focos: %d detecções, %d setores com ≥1 foco",
+                    len(focos_gdf), int((gdf["focos_estacao"] > 0).sum()))
+
     ok = gdf["cobertura_calor"] >= args.min_cobertura
     gdf["interpolado"] = False
     if not args.sem_interpolar:
@@ -610,12 +626,24 @@ def _run_pipeline(args, writer, recorder=None):
             "area_ha", "cobertura_calor", "interpolado"]
     if args.arborizacao:
         cols.append(args.col_arbor)
+    if args.focos:
+        cols.append("focos_estacao")
     gdf = gdf.sort_values("rank", na_position="last")
 
     with recorder.stage("write"):
         gdf[cols].round(3).to_csv(writer.path("ranking.csv"), index=False)
         gdf[cols + ["geometry"]].round(3).to_crs("EPSG:4326").to_file(
             writer.path("unidades_prioridade.geojson"), driver="GeoJSON")
+
+        if args.focos:
+            # emite focos.geojson (pontos) pro viewer consumir como camada separada
+            focos_df_out = pd.read_csv(args.focos)
+            focos_gdf_out = gpd.GeoDataFrame(
+                focos_df_out[["id", "data_hora_gmt", "satelite", "frp"]],
+                geometry=gpd.points_from_xy(focos_df_out["lon"], focos_df_out["lat"]),
+                crs="EPSG:4326",
+            )
+            focos_gdf_out.to_file(writer.path("focos.geojson"), driver="GeoJSON")
 
         resumo = {
             "ano_atual": C.YEAR_NOW, "ano_base": C.YEAR_BASE,

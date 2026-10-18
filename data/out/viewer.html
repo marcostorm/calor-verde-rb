@@ -171,6 +171,7 @@
     <label class="toggle"><input type="checkbox" id="t-edu" checked> Escolas</label>
     <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
     <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
+    <label class="toggle"><input type="checkbox" id="t-foc"> Focos de queimada (jun–set)</label>
   </div>
 
   <h2 id="top-title">Os 10 setores mais críticos</h2>
@@ -200,6 +201,9 @@
 
       <dt>Arborização na calçada (IBGE 2022)</dt>
       <dd>Percentual de moradores do setor cuja casa fica em face de quadra com pelo menos uma árvore, segundo a Pesquisa Urbanística do Entorno dos Domicílios do Censo 2022. Complementa o NDVI do satélite com o que o IBGE viu em campo. Nem todo setor foi pesquisado: 87 setores de Rio Branco (sobretudo rurais) ficam sem valor.</dd>
+
+      <dt>Focos de queimada (INPE)</dt>
+      <dd>Detecções pontuais de assinatura térmica compatível com fogo, feitas pelo satélite AQUA_M-T (referência histórica do INPE desde 2002) na estação seca (jun–set). Cada ponto no mapa é uma passagem do satélite que registrou fogo num pixel de ~1 km, não o contorno da área queimada. Um foco pode corresponder a um fogo pequeno ou a um incêndio grande; a métrica mostra incidência, não extensão. Não entra no índice de prioridade: é camada de contexto pra separar "verde que caiu por queimada" de "verde que caiu por corte ou seca".</dd>
 
       <dt>Setor censitário</dt>
       <dd>Menor unidade do IBGE para o Censo: polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). Como o IBGE não oficializa divisão por bairros, o ranking é por setor; o bairro aparece como rótulo auxiliar.</dd>
@@ -286,7 +290,7 @@ const LEGEND_SPECS = {
   }
 };
 
-let pri, edu, sau, bus, legend;
+let pri, edu, sau, bus, foc, legend;
 let currentVer = 'conservador';
 let currentModo = 'prioridade';
 
@@ -342,6 +346,10 @@ function pop(f){
   rows.push(`<dt>Vegetação perdida</dt><dd><span class="sp-val">${fmtNum(p.perda_ha, 2)} ha</span>${perdaPill}</dd>`);
   if(p.pct_arborizacao != null){
     rows.push(`<dt>Arborização na calçada</dt><dd><span class="sp-val">${fmtNum(p.pct_arborizacao, 0)}%</span><span class="sp-pill-muted">IBGE 2022</span></dd>`);
+  }
+  if(p.focos_estacao != null){
+    const nFocos = Number(p.focos_estacao) || 0;
+    rows.push(`<dt>Focos de queimada</dt><dd><span class="sp-val">${nFocos}</span><span class="sp-pill-muted">jun–set, INPE</span></dd>`);
   }
   rows.push(`<dt>Confiança do dado</dt><dd><span class="sp-val">${((p.cobertura_calor||0)*100).toFixed(0)}%</span></dd>`);
 
@@ -475,6 +483,24 @@ fetch('pois_calor.geojson').then(r=>r.json()).then(gj=>{
   bus = L.layerGroup(byCat.ponto_onibus);
 });
 
+// Focos de queimada (AQUA_M-T, estação seca)
+fetch('focos.geojson').then(r=>r.ok?r.json():null).then(gj=>{
+  if(!gj) return;
+  const markers = gj.features.map(f=>{
+    if(!f.geometry) return null;
+    const [lng,lat] = f.geometry.coordinates;
+    const p = f.properties;
+    const dh = (p.data_hora_gmt||'').replace('T',' ').slice(0,16);
+    return L.circleMarker([lat,lng], {
+      radius:3.5, color:'#7a1500', weight:0.6, fillColor:'#e34a1a', fillOpacity:0.75
+    }).bindPopup(
+      `<b>Foco de queimada</b><br>${dh} GMT<br>Satélite: ${p.satelite||'—'}<br>FRP: ${p.frp==null?'—':Number(p.frp).toFixed(1)} MW`
+    );
+  }).filter(Boolean);
+  foc = L.layerGroup(markers);
+  // mantém oculto por padrão (toggle liga)
+});
+
 const bind = (id, getLayer) => {
   document.getElementById(id).onchange = e => {
     const l = getLayer(); if(!l) return;
@@ -483,6 +509,7 @@ const bind = (id, getLayer) => {
 };
 bind('t-pri', ()=>pri); bind('t-edu', ()=>edu);
 bind('t-sau', ()=>sau); bind('t-bus', ()=>bus);
+bind('t-foc', ()=>foc);
 
 // radio versão
 document.querySelectorAll('input[name=ver]').forEach(r=>{
