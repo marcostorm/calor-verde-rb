@@ -414,12 +414,17 @@ def main():
     print(f"[relatorio] renderizando PDF via WeasyPrint...")
     HTML(string=html, base_url=".").write_pdf(saida)
 
+    # cópia estável pro link do viewer/ranking (sempre o mais recente)
+    latest = saida.parent / "calor-verde-rb_latest.pdf"
+    latest.write_bytes(saida.read_bytes())
+
     # limpa png temporários
     for p in tmp_dir.glob("*.png"):
         p.unlink()
     tmp_dir.rmdir()
 
     print(f"[relatorio] gerado {saida} ({saida.stat().st_size // 1024} KB)")
+    print(f"[relatorio] cópia estável: {latest}")
 
 
 if __name__ == "__main__":

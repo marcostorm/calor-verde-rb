@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'data/out/**'
+      - 'relatorios/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -31,6 +32,11 @@ jobs:
         run: |
           mkdir -p _site
           cp -r data/out/. _site/
+          # relatórios PDF ficam acessíveis em /relatorios/
+          if [ -d relatorios ]; then
+            mkdir -p _site/relatorios
+            cp -r relatorios/. _site/relatorios/
+          fi
           # viewer.html é a landing page do site
           cp _site/viewer.html _site/index.html
 
