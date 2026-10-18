@@ -305,7 +305,11 @@ function toggleDetail(tr, r){
     <div><dt>Focos de queimada (jun–set)</dt><dd>${r.focos_estacao==null?'—':Math.round(r.focos_estacao)} <span class="obs">(AQUA_M-T / INPE)</span></dd></div>
     <div><dt>Área do setor</dt><dd>${fmtNum(r.area_ha,1)} ha</dd></div>
     <div><dt>Confiança do dado</dt><dd>${r.cobertura_calor==null?'—':(r.cobertura_calor*100).toFixed(0)+'%'} <span class="obs">(pixels livres de nuvem/sombra)</span></dd></div>
-    <div><dt>Origem dos dados</dt><dd>${r.interpolado?'estimado por buffer de 3,5 km (±2,3 °C)':'pixels próprios do setor'}</dd></div>
+    <div><dt>Origem dos dados</dt><dd>${
+      r.fonte_lst === 'modis' ? '<span style="color:#6b4e9e">MODIS 1 km (fallback de nuvem persistente)</span>'
+      : r.interpolado ? 'estimado por buffer de 3,5 km (±2,3 °C)'
+      : 'pixels Landsat próprios do setor (30 m)'
+    }</dd></div>
   </dl></div></td>`;
   tr.after(dr);
 }

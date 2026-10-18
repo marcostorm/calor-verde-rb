@@ -14,36 +14,26 @@
     {
       "nome": "120040105000424",
       "bairro": "Habitar Brasil",
-      "indice_prioridade": 69.97,
+      "indice_prioridade": 72.18,
       "lst_mean": 43.68
+    },
+    {
+      "nome": "120040105000293",
+      "bairro": "Conjunto Mariana",
+      "indice_prioridade": 71.38,
+      "lst_mean": 40.28
+    },
+    {
+      "nome": "120040105000804",
+      "bairro": "LBA Vila Betel II",
+      "indice_prioridade": 70.68,
+      "lst_mean": 41.14
     },
     {
       "nome": "120040105000062",
       "bairro": "Aeroporto Velho",
-      "indice_prioridade": 68.65,
+      "indice_prioridade": 70.14,
       "lst_mean": 44.38
-    },
-    {
-      "nome": "120040105000099",
-      "bairro": "João Eduardo I",
-      "indice_prioridade": 68.53,
-      "lst_mean": 45.62
-    },
-    {
-      "nome": "120040105000061",
-      "bairro": "Aeroporto Velho",
-      "indice_prioridade": 67.57,
-      "lst_mean": 43.76
     }
-  ],
-  "pois_em_zona_quente": {
-    "educacao": 142,
-    "ponto_onibus": 55,
-    "saude": 30
-  },
-  "pois_total": {
-    "educacao": 214,
-    "ponto_onibus": 57,
-    "saude": 41
-  }
+  ]
 }

@@ -1,0 +1,39 @@
+{
+  "ano_atual": 2026,
+  "ano_base": 2019,
+  "lst_media_cidade": 34.83,
+  "lst_p75_cidade": 36.51,
+  "perda_total_ha": 2037.7,
+  "top5_prioridade": [
+    {
+      "nome": "120040105000314",
+      "bairro": "Vila da Amizade",
+      "indice_prioridade": 74.85,
+      "lst_mean": 45.84
+    },
+    {
+      "nome": "120040105000424",
+      "bairro": "Habitar Brasil",
+      "indice_prioridade": 72.18,
+      "lst_mean": 43.68
+    },
+    {
+      "nome": "120040105000293",
+      "bairro": "Conjunto Mariana",
+      "indice_prioridade": 71.38,
+      "lst_mean": 40.28
+    },
+    {
+      "nome": "120040105000804",
+      "bairro": "LBA Vila Betel II",
+      "indice_prioridade": 70.68,
+      "lst_mean": 41.14
+    },
+    {
+      "nome": "120040105000062",
+      "bairro": "Aeroporto Velho",
+      "indice_prioridade": 70.14,
+      "lst_mean": 44.38
+    }
+  ]
+}
