@@ -55,6 +55,8 @@
   button{background:var(--bg-page);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 14px;cursor:pointer;transition:background .15s}
   button:hover{background:var(--bg-strong)}
   button:active{background:var(--border-strong);color:#fff}
+  .kv-group-title{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--text);margin:14px 0 2px}
+  .footnote{font-size:11px;color:var(--text-faint);margin-top:12px;font-style:italic;line-height:1.4}
   a{color:var(--accent)}
   .export{display:flex;gap:8px;align-items:center;margin:12px 0 16px}
   .export .meta{color:var(--text-faint);font-size:11px;margin-left:auto;font-style:italic}
@@ -92,99 +94,107 @@
 <div id="map"></div>
 <aside id="side">
   <h1>Calor &amp; Verde — Rio Branco</h1>
-  <div class="sub">Prioridade de plantio por setor censitário (IBGE 2022). Dados: Landsat/Sentinel-2, estação seca jun–set.</div>
+  <div class="sub">Onde a cidade mais precisa de árvore. Em cada setor censitário do IBGE, medimos quanto o chão esquenta (satélite Landsat 8/9) e quanta vegetação sobra (Sentinel-2) na estação seca.</div>
 
   <div class="print-header">
     <h1 style="margin:0 0 2px">Calor &amp; Verde — Rio Branco</h1>
-    <small>Prioridade de plantio por setor censitário · versão <span id="print-ver">conservador</span> · <span id="print-date"></span></small>
+    <small>Prioridade de plantio por setor censitário · versão <span id="print-ver">confiável</span> · <span id="print-date"></span></small>
   </div>
 
   <div class="export">
     <button id="btn-pdf" title="Abre o diálogo de impressão — escolha 'Salvar como PDF'">Baixar PDF</button>
     <button id="btn-png" title="Gera um PNG da sidebar atual (sem o mapa)">Baixar PNG</button>
+    <a class="link" href="ranking.html">Lista completa</a>
     <a class="link" href="metodo.html">Metodologia</a>
   </div>
 
   <div class="ver">
-    <b>Versão do ranking:</b><br>
-    <label><input type="radio" name="ver" value="conservador" checked> Conservador — só setores com ≥50% de pixels válidos de calor</label>
-    <label><input type="radio" name="ver" value="amplo"> Ampla — inclui setores com ≥20% <span class="pill">+37 setores</span></label>
+    <b>Versão do mapa:</b><br>
+    <label><input type="radio" name="ver" value="conservador" checked> Só áreas com dado confiável — ao menos 50% do setor livre de nuvem</label>
+    <label><input type="radio" name="ver" value="amplo"> Mapa inteiro, incluindo áreas de dado fraco <span class="pill">+37 setores</span></label>
   </div>
 
   <div id="resumo">carregando…</div>
 
   <h2 id="camadas-title">Camadas</h2>
   <div id="camadas-controls">
-    <label class="toggle"><input type="checkbox" id="t-pri" checked> Choropleth</label>
+    <label class="toggle"><input type="checkbox" id="t-pri" checked> Mapa colorido</label>
     <div style="margin-left:20px;margin-bottom:6px">
-      <label><input type="radio" name="modo" value="prioridade" checked> por prioridade (0–100)</label><br>
-      <label><input type="radio" name="modo" value="lst"> por temperatura (°C)</label>
+      <label><input type="radio" name="modo" value="prioridade" checked> pela nota de prioridade</label><br>
+      <label><input type="radio" name="modo" value="lst"> pela temperatura do chão</label>
     </div>
     <label class="toggle"><input type="checkbox" id="t-edu" checked> Escolas</label>
     <label class="toggle"><input type="checkbox" id="t-sau" checked> Unidades de saúde</label>
     <label class="toggle"><input type="checkbox" id="t-bus"> Pontos de ônibus</label>
   </div>
 
-  <h2 id="top-title">Top 10 setores</h2>
-  <table id="top"><thead><tr><td><b>rank</b></td><td><b>setor</b></td><td><b>bairro</b></td><td class="r"><b>índice</b></td><td class="r"><b>LST</b></td></tr></thead><tbody></tbody></table>
+  <h2 id="top-title">Os 10 setores mais críticos</h2>
+  <table id="top"><thead><tr><td><b>#</b></td><td><b>setor</b></td><td><b>bairro</b></td><td class="r"><b>nota</b></td><td class="r"><b>°C</b></td></tr></thead><tbody></tbody></table>
 
   <details>
-    <summary>📖 Glossário</summary>
+    <summary>Glossário</summary>
+    <h3 style="font-family:var(--serif);font-size:13px;margin:12px 0 4px;color:var(--text)">Em uma frase cada</h3>
     <dl>
-      <dt>LST (Land Surface Temperature)</dt>
-      <dd>Temperatura da superfície medida pelo sensor termal do Landsat 8/9. Mede o quanto o chão (asfalto, telhado, mato, água) irradia calor — <b>não</b> é a mesma coisa que a temperatura do ar. Útil pra comparar áreas entre si.</dd>
+      <dt>Temperatura do chão</dt>
+      <dd>Quanto a superfície (asfalto, telhado, mato) irradia calor sob o sol. Medida pelo satélite Landsat 8/9 ao meio-dia local. Não equivale à temperatura do ar, mas é um indicador comparável entre áreas da mesma cidade na mesma data.</dd>
 
-      <dt>NDVI (Normalized Difference Vegetation Index)</dt>
-      <dd>Índice de vegetação do Sentinel-2 (−1 a 1). Acima de 0,5 ≈ vegetação densa; perto de 0 ≈ solo nu/asfalto; valores negativos ≈ água.</dd>
+      <dt>Vegetação</dt>
+      <dd>Índice de −1 a 1 derivado do Sentinel-2. Acima de 0,5: mata densa; perto de zero: solo exposto, telhado ou pavimento; abaixo de zero: corpo d'água.</dd>
 
-      <dt>NDVI Δ (delta)</dt>
-      <dd>NDVI atual (2026) menos NDVI base (2019). Negativo = perdeu verde no período.</dd>
+      <dt>Vegetação perdida</dt>
+      <dd>Pixels que estavam vegetados em 2019 (índice ≥ 0,5) e tiveram queda de ao menos 0,2 pontos até 2026. Captura corte, queimada ou seca severa — não só desmatamento.</dd>
 
-      <dt>Perda (ha e %)</dt>
-      <dd>Área onde pixels verdes em 2019 (NDVI ≥ 0,5) caíram pelo menos 0,2 pontos até 2026. "Perda %" = fração dos pixels classificáveis do setor que entraram nesse critério. Captura corte, queimada ou seca severa — não só desmatamento.</dd>
+      <dt>Zona de calor extremo</dt>
+      <dd>Áreas onde o chão passa de 36,5 °C na estação seca. Esse limiar é o quartil superior da cidade: 25% das áreas urbanas estão acima dele.</dd>
 
-      <dt>Anomalia de calor</dt>
-      <dd>LST do setor menos LST média da cidade (34,8 °C em 2026). Valor positivo = mais quente que a média urbana.</dd>
+      <dt>Prioridade (0–100)</dt>
+      <dd>Combinação ponderada entre calor (peso 50%), falta de vegetação (30%) e vegetação perdida (20%). 100 é o pior caso observado na cidade. Faixas: até 25 baixa, 25 a 55 média, 55 a 85 alta, 85 ou mais crítica.</dd>
 
-      <dt>p75 / p90</dt>
-      <dd>Percentis. "p75 da cidade" = temperatura abaixo da qual estão 75% das áreas; o restante (os 25% mais quentes) é a <b>zona quente</b>. p90 do setor = temperatura típica dos 10% mais quentes dentro dele.</dd>
-
-      <dt>Zona quente</dt>
-      <dd>Pixel ou ponto (escola, posto, parada) onde LST ≥ p75 da cidade. É onde pessoas estão expostas ao calor mais extremo.</dd>
-
-      <dt>Cobertura de calor</dt>
-      <dd>Fração dos pixels de LST do setor que ficaram válidos após máscara de nuvem/sombra do Landsat. Abaixo do limiar (50% ou 20%, conforme a versão) o setor sai do ranking porque a estatística fica frágil demais.</dd>
-
-      <dt>Índice de prioridade (0–100)</dt>
-      <dd><code>0,5 × calor + 0,3 × falta_de_verde + 0,2 × perda</code>, cada termo normalizado min–max entre as unidades. 100 = o pior caso da cidade (mais quente, menos verde, mais perda). Pesos em <code>config.py</code>.</dd>
-
-      <dt>Rank</dt>
-      <dd>Posição no ranking de prioridade; 1 = plantar primeiro.</dd>
+      <dt>Confiança do dado</dt>
+      <dd>Fração do setor com pixels livres de nuvem e sombra nas imagens do Landsat. Abaixo de 50% o setor sai da versão "confiável" do ranking.</dd>
 
       <dt>Setor censitário</dt>
-      <dd>Menor unidade do IBGE para o Censo — polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). O IBGE não oficializou divisão por bairros, por isso o ranking é por setor.</dd>
-
-      <dt>Bairro</dt>
-      <dd>Rótulo informativo vindo do OpenStreetMap (<code>place=suburb</code>, <code>neighbourhood</code>, <code>quarter</code>). OSM só mapeia bairros de Rio Branco como pontos, então o nome é atribuído ao setor por vizinho mais próximo (até 3 km do centróide). Setor rural distante fica sem bairro. Nomes podem repetir em partes diferentes da cidade (ex. há dois "Centro").</dd>
+      <dd>Menor unidade do IBGE para o Censo — polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). Como o IBGE não oficializa divisão por bairros, o ranking é por setor; o bairro aparece como rótulo auxiliar.</dd>
 
       <dt>Estação seca</dt>
-      <dd>Jun–set na Amazônia. Mais cenas aproveitáveis dos satélites (menos nuvem) e também o período de pico de calor.</dd>
+      <dd>Junho a setembro na Amazônia ocidental. É o período com menos nuvem (mais cenas de satélite aproveitáveis) e também o pico de calor de superfície.</dd>
+    </dl>
+
+    <h3 style="font-family:var(--serif);font-size:13px;margin:16px 0 4px;color:var(--text)">Termos técnicos</h3>
+    <dl>
+      <dt>LST (Land Surface Temperature)</dt>
+      <dd>Temperatura de brilho da superfície derivada da banda termal do Landsat 8/9 (<code>ST_B10</code>), convertida de kelvin para °C e mascarada por nuvem/sombra via <code>QA_PIXEL</code>. É a grandeza que a interface chama de "temperatura do chão".</dd>
+
+      <dt>NDVI (Normalized Difference Vegetation Index)</dt>
+      <dd><code>(NIR − RED) / (NIR + RED)</code>, calculado a partir do Sentinel-2 L2A com Cloud Score+ ≥ 0,6. A interface chama de "vegetação".</dd>
+
+      <dt>Δ NDVI (delta)</dt>
+      <dd>NDVI atual (2026) menos NDVI base (2019). Negativo indica perda de vegetação no período.</dd>
+
+      <dt>p75 / p90</dt>
+      <dd>Percentis. p75 da cidade = limiar da zona de calor extremo (temperatura abaixo da qual estão 75% das áreas). p90 do setor = temperatura típica dos 10% mais quentes dentro dele.</dd>
+
+      <dt>Anomalia de calor</dt>
+      <dd>Temperatura média do chão no setor menos a média da cidade. No popup aparece como "N °C acima/abaixo da média da cidade".</dd>
+
+      <dt>Setor estimado por buffer (interpolado)</dt>
+      <dd>Setor sem cobertura de pixels suficiente, com métricas estimadas a partir de um buffer de 3,5 km ao redor da geometria, restrito à mesma SITUACAO (urbano amostra urbano, rural amostra rural). Aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro. Erro típico: ±2,3 °C (cross-validation leave-one-out).</dd>
+
+      <dt>Versões "confiável" e "mapa inteiro"</dt>
+      <dd>Limiares de cobertura: 50% (confiável) ou 20% (mapa inteiro). A primeira é mais robusta para decisão pública; a segunda cobre mais setores com dado parcial.</dd>
+
+      <dt>Rótulo de bairro</dt>
+      <dd>Vem do OpenStreetMap (<code>place=suburb</code>, <code>neighbourhood</code>, <code>quarter</code>). OSM mapeia os bairros de Rio Branco como pontos, então o nome é atribuído ao setor por vizinho mais próximo (até 3 km do centróide). Setor rural distante fica sem bairro; nomes podem repetir em partes diferentes da cidade (há dois "Centro").</dd>
 
       <dt>POI</dt>
-      <dd>Point of Interest — escolas, unidades de saúde, pontos de ônibus. Fonte: OpenStreetMap (atual).</dd>
-
-      <dt>Conservador vs Ampla</dt>
-      <dd>Versões do ranking com limiares de cobertura diferentes. <b>Conservador (50%)</b>: estatísticas mais robustas, melhor pra decisão pública. <b>Ampla (20%)</b>: cobre mais setores no mapa, mais ruidoso nas bordas.</dd>
-
-      <dt>Setor interpolado</dt>
-      <dd>Setor que não tinha cobertura LST própria suficiente, mas cujas métricas foram estimadas amostrando os pixels de um buffer de 3,5 km ao redor da geometria <b>restrito à mesma SITUACAO</b> (urbano amostra urbano, rural amostra rural). No mapa aparecem com <span style="color:#b8860b">borda tracejada dourada</span> e preenchimento mais claro.</dd>
+      <dd>Point of Interest. Escolas, unidades de saúde e pontos de ônibus são extraídos do OpenStreetMap no momento da rodada.</dd>
     </dl>
   </details>
 
   <details id="qa-panel">
-    <summary>🧪 QA da rodada</summary>
+    <summary>QA da rodada</summary>
     <div id="qa-metrics">carregando…</div>
-    <div style="margin-top:8px"><label class="toggle"><input type="checkbox" id="t-only-interp"> Mostrar só interpolados</label></div>
+    <div style="margin-top:8px"><label class="toggle"><input type="checkbox" id="t-only-interp"> Mostrar só setores estimados por buffer</label></div>
     <h3 style="font-size:12px;margin:10px 0 4px">Distribuição de LST (°C)</h3>
     <svg id="qa-hist" width="340" height="80" style="background:#fff;border:1px solid #eee"></svg>
     <h3 style="font-size:12px;margin:10px 0 4px">Cobertura LST por setor</h3>
@@ -218,12 +228,12 @@ const COLOR_FNS = { prioridade: colorPri, lst: colorLST };
 const COLOR_PROP = { prioridade: 'indice_prioridade', lst: 'lst_mean' };
 const LEGEND_SPECS = {
   prioridade: {
-    title: 'Prioridade',
-    bins: [[0,'<10 — baixa'],[10,'10–25'],[25,'25–40'],[40,'40–55'],[55,'55–70'],[70,'70–85'],[85,'≥85 — crítica']]
+    title: 'Prioridade de plantio',
+    bins: [[0,'baixa (<10)'],[10,'10–25'],[25,'25–40 (média)'],[40,'40–55'],[55,'55–70 (alta)'],[70,'70–85'],[85,'crítica (≥85)']]
   },
   lst: {
-    title: 'Temperatura (°C)',
-    bins: [[0,'<28 °C'],[28,'28–32'],[32,'32–36'],[36,'36–40'],[40,'40–44'],[44,'44–48'],[48,'≥48 °C']]
+    title: 'Temperatura do chão (°C)',
+    bins: [[0,'<28'],[28,'28–32'],[32,'32–36 (média da cidade)'],[36,'36–40 (zona de calor extremo)'],[40,'40–44'],[44,'44–48'],[48,'≥48']]
   }
 };
 
@@ -232,29 +242,39 @@ let currentVer = 'conservador';
 let currentModo = 'prioridade';
 
 const TOOLTIPS = {
-  'LST média cidade': 'Temperatura média da superfície (Landsat) na mancha urbana durante a estação seca',
-  'LST p75 cidade': 'Limiar da zona quente: 25% das áreas da cidade estão acima disso',
-  'Perda total': 'Hectares que eram verdes em 2019 e deixaram de ser em 2026',
-  'Escolas em zona quente': 'Escolas localizadas em pixels de LST ≥ p75 da cidade',
-  'Saúde em zona quente': 'Unidades de saúde em zona quente',
-  'Ônibus em zona quente': 'Pontos de ônibus em zona quente',
-  'Ano atual': 'Ano das camadas de LST, NDVI atual e perda',
-  'Ano base': 'Ano do NDVI base, usado para calcular a perda de vegetação',
-  'Setores no ranking': 'Setores censitários com cobertura de pixels válidos suficiente para entrar no índice'
+  'Temperatura do chão (média)': 'Média da temperatura de superfície (Landsat 8/9) na mancha urbana durante a estação seca',
+  'Zona de calor extremo (acima de)': 'Quartil superior da cidade (p75): 25% das áreas urbanas estão acima deste limiar',
+  'Vegetação perdida': 'Hectares onde o NDVI caiu de ≥0,5 em 2019 para abaixo em 2026 — captura corte, queimada ou seca severa',
+  'Escolas': 'Escolas em pixels onde a temperatura do chão fica acima do limiar da zona de calor extremo',
+  'Postos de saúde': 'Unidades de saúde na zona de calor extremo',
+  'Pontos de ônibus': 'Pontos de ônibus na zona de calor extremo'
 };
+const VER_LABEL = { conservador: 'confiável', amplo: 'mapa inteiro' };
+const NIVEL = v => v==null ? '—' : v>=85 ? 'crítica' : v>=55 ? 'alta' : v>=25 ? 'média' : 'baixa';
+const fmtNum = (n, d=1) => n==null ? '—' : Number(n).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
 
 function pop(f){
   const p = f.properties;
-  const safe = (v, d=1) => v==null ? '—' : v.toFixed(d);
-  const tag = p.interpolado ? ' <span style="color:#b8860b">(interpolado por buffer)</span>' : '';
+  const tag = p.interpolado ? ' <span style="color:#b8860b">(estimado por buffer)</span>' : '';
   const nomeBairro = p.bairro ? ` · ${p.bairro}` : '';
-  return `<b>Setor ${p.nome}${nomeBairro}</b>${tag}<br>
-    <b>Prioridade: ${safe(p.indice_prioridade)}</b> (rank ${p.rank ?? '—'})<br>
-    <b>LST</b>: média ${safe(p.lst_mean)} °C · p90 ${safe(p.lst_percentile_90)} °C<br>
-    <b>Anomalia</b>: ${p.anomalia_calor>0?'+':''}${safe(p.anomalia_calor)} °C vs. cidade<br>
-    <b>NDVI atual</b>: ${safe(p.ndvi_atual_mean,2)} (Δ ${safe(p.ndvi_delta,2)} vs. 2019)<br>
-    <b>Perda</b>: ${safe(p.perda_ha,2)} ha (${safe(p.perda_pct,0)}%)<br>
-    <b>Cobertura calor</b>: ${((p.cobertura_calor||0)*100).toFixed(0)}%`;
+  const setor = p.nome ? p.nome.slice(-3) : '—';
+  const posicao = p.rank
+    ? `<b>${p.rank}º da cidade</b> na fila de plantio`
+    : '<i>fora do ranking confiável</i>';
+  const anom = p.anomalia_calor;
+  const anomTxt = anom==null ? ''
+    : anom>0 ? ` (${fmtNum(anom)} °C acima da média da cidade)`
+             : ` (${fmtNum(Math.abs(anom))} °C abaixo da média da cidade)`;
+  const ndvi = fmtNum(p.ndvi_atual_mean, 2);
+  const ndviDelta = p.ndvi_delta==null ? '—'
+    : (p.ndvi_delta>0?'+':'') + fmtNum(p.ndvi_delta, 2);
+  return `<b>Setor ${setor}${nomeBairro}</b>${tag}<br>
+    ${posicao}<br>
+    <b>Prioridade</b>: ${fmtNum(p.indice_prioridade)} de 100 (${NIVEL(p.indice_prioridade)})<br>
+    <b>Temperatura do chão</b>: ${fmtNum(p.lst_mean)} °C${anomTxt}<br>
+    <b>Vegetação</b>: índice ${ndvi} (variação ${ndviDelta} desde 2019)<br>
+    <b>Vegetação perdida</b>: ${fmtNum(p.perda_ha, 2)} ha (${fmtNum(p.perda_pct, 0)}% do setor)<br>
+    <b>Confiança do dado</b>: ${((p.cobertura_calor||0)*100).toFixed(0)}%`;
 }
 
 function clearPri(){
@@ -287,7 +307,7 @@ function loadPri(ver){
     const feats = gj.features.filter(f=>f.properties.rank!=null)
       .sort(sorter).slice(0,10);
     document.getElementById('top-title').textContent =
-      currentModo === 'lst' ? 'Top 10 mais quentes' : 'Top 10 prioritários';
+      currentModo === 'lst' ? 'Os 10 setores mais quentes' : 'Os 10 setores mais críticos';
     const tb = document.querySelector('#top tbody');
     feats.forEach(f=>{
       const p = f.properties;
@@ -319,17 +339,19 @@ function loadResumo(ver){
       const tip = TOOLTIPS[k] ? `title="${TOOLTIPS[k]}"` : '';
       return `<div class="kv"><span class="k" ${tip}>${k}</span><b>${v}</b></div>`;
     };
-    const nSet = s.setores_no_ranking ?? '—';
+    const zq = s.pois_em_zona_quente || {};
+    const tot = s.pois_total || {};
+    const fracao = (a, b) => `${a ?? 0} de ${b ?? 0}`;
     document.getElementById('resumo').innerHTML =
-      '<h2 style="margin-top:0">Resumo da cidade</h2>' +
-      kv('Ano atual', s.ano_atual) +
-      kv('Ano base', s.ano_base) +
-      kv('LST média cidade', s.lst_media_cidade+' °C') +
-      kv('LST p75 cidade', s.lst_p75_cidade+' °C') +
-      kv('Perda total', s.perda_total_ha+' ha') +
-      kv('Escolas em zona quente', `${s.pois_em_zona_quente?.educacao ?? 0} / ${s.pois_total?.educacao ?? 0}`) +
-      kv('Saúde em zona quente', `${s.pois_em_zona_quente?.saude ?? 0} / ${s.pois_total?.saude ?? 0}`) +
-      kv('Ônibus em zona quente', `${s.pois_em_zona_quente?.ponto_onibus ?? 0} / ${s.pois_total?.ponto_onibus ?? 0}`);
+      `<h2 style="margin-top:0">Rio Branco na seca de ${s.ano_atual}</h2>` +
+      kv('Temperatura do chão (média)', fmtNum(s.lst_media_cidade) + ' °C') +
+      kv('Zona de calor extremo (acima de)', fmtNum(s.lst_p75_cidade) + ' °C') +
+      kv(`Vegetação perdida desde ${s.ano_base}`, fmtNum(s.perda_total_ha) + ' ha') +
+      '<div class="kv-group-title">Equipamentos públicos na zona de calor extremo</div>' +
+      kv('Escolas', fracao(zq.educacao, tot.educacao)) +
+      kv('Postos de saúde', fracao(zq.saude, tot.saude)) +
+      kv('Pontos de ônibus', fracao(zq.ponto_onibus, tot.ponto_onibus)) +
+      `<div class="footnote">Medido entre junho e setembro de ${s.ano_atual} · comparação com ${s.ano_base}</div>`;
   });
 }
 
@@ -337,13 +359,17 @@ function loadResumo(ver){
 fetch('pois_calor.geojson').then(r=>r.json()).then(gj=>{
   const mk = (color) => (lat,lng)=>L.circleMarker([lat,lng],{radius:4,color:'#111',weight:0.6,fillColor:color,fillOpacity:0.85});
   const COL = {educacao:'#1f77b4', saude:'#d62728', ponto_onibus:'#7f7f7f'};
+  const CAT_LABEL = {educacao:'Escola', saude:'Unidade de saúde', ponto_onibus:'Ponto de ônibus'};
   const byCat = {educacao:[],saude:[],ponto_onibus:[]};
   gj.features.forEach(f=>{
     if(!f.geometry) return;
     const [lng,lat] = f.geometry.coordinates;
     const cat = f.properties.categoria;
+    const lst = f.properties.lst;
+    const extremo = f.properties.zona_quente
+      ? '<br><b>Dentro da zona de calor extremo</b>' : '';
     const m = mk(COL[cat])(lat,lng).bindPopup(
-      `<b>${f.properties.nome||'(sem nome)'}</b><br>${cat}<br>LST: ${f.properties.lst?.toFixed(1) ?? '—'} °C${f.properties.zona_quente?' · <b>zona quente</b>':''}`);
+      `<b>${f.properties.nome||'(sem nome)'}</b><br>${CAT_LABEL[cat] || cat}<br>Temperatura do chão aqui: ${fmtNum(lst)} °C${extremo}`);
     byCat[cat].push(m);
   });
   edu = L.layerGroup(byCat.educacao).addTo(map);
@@ -486,7 +512,7 @@ document.getElementById('btn-png').onclick = async () => {
         document.head.appendChild(s);
       });
     }
-    document.getElementById('print-ver').textContent = currentVer;
+    document.getElementById('print-ver').textContent = VER_LABEL[currentVer] || currentVer;
     document.body.classList.add('exporting');
     // Yield pro layout aplicar `.exporting` antes do snapshot
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
