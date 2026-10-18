@@ -8,32 +8,32 @@
     {
       "nome": "120040105000314",
       "bairro": "Vila da Amizade",
-      "indice_prioridade": 79.66,
+      "indice_prioridade": 74.85,
       "lst_mean": 45.84
     },
     {
-      "nome": "120040105000099",
-      "bairro": "João Eduardo I",
-      "indice_prioridade": 77.55,
-      "lst_mean": 45.62
-    },
-    {
-      "nome": "120040105000098",
-      "bairro": "João Eduardo I",
-      "indice_prioridade": 75.46,
-      "lst_mean": 45.41
-    },
-    {
-      "nome": "120040105000655",
-      "bairro": "João Eduardo I",
-      "indice_prioridade": 71.21,
-      "lst_mean": 44.54
+      "nome": "120040105000424",
+      "bairro": "Habitar Brasil",
+      "indice_prioridade": 69.97,
+      "lst_mean": 43.68
     },
     {
       "nome": "120040105000062",
       "bairro": "Aeroporto Velho",
-      "indice_prioridade": 70.0,
+      "indice_prioridade": 68.65,
       "lst_mean": 44.38
+    },
+    {
+      "nome": "120040105000099",
+      "bairro": "João Eduardo I",
+      "indice_prioridade": 68.53,
+      "lst_mean": 45.62
+    },
+    {
+      "nome": "120040105000061",
+      "bairro": "Aeroporto Velho",
+      "indice_prioridade": 67.57,
+      "lst_mean": 43.76
     }
   ],
   "pois_em_zona_quente": {

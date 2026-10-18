@@ -167,6 +167,9 @@
       <dt>Confiança do dado</dt>
       <dd>Fração do setor com pixels livres de nuvem e sombra nas imagens do Landsat. Abaixo de 50% o setor sai da versão "confiável" do ranking.</dd>
 
+      <dt>Arborização na calçada (IBGE 2022)</dt>
+      <dd>Percentual de moradores do setor cuja casa fica em face de quadra com pelo menos uma árvore, segundo a Pesquisa Urbanística do Entorno dos Domicílios do Censo 2022. Complementa o NDVI do satélite com o que o IBGE viu em campo. Nem todo setor foi pesquisado — 87 setores de Rio Branco (sobretudo rurais) ficam sem valor.</dd>
+
       <dt>Setor censitário</dt>
       <dd>Menor unidade do IBGE para o Censo — polígono com algumas centenas de domicílios. Rio Branco tem 669 (593 urbanos, 76 rurais). Como o IBGE não oficializa divisão por bairros, o ranking é por setor; o bairro aparece como rótulo auxiliar.</dd>
 
@@ -294,6 +297,7 @@ function pop(f){
     <b>Temperatura do chão</b>: ${THERMO}${fmtNum(p.lst_mean)} °C${anomTxt}<br>
     <b>Vegetação</b>: índice ${ndvi} (variação ${ndviDelta} desde 2019)<br>
     <b>Vegetação perdida</b>: ${fmtNum(p.perda_ha, 2)} ha (${fmtNum(p.perda_pct, 0)}% do setor)<br>
+    ${p.pct_arborizacao != null ? `<b>Arborização na calçada</b>: ${fmtNum(p.pct_arborizacao, 0)}% dos moradores <span style="color:var(--text-muted);font-size:11px">(IBGE 2022)</span><br>` : ''}
     <b>Confiança do dado</b>: ${((p.cobertura_calor||0)*100).toFixed(0)}%`;
 }
 

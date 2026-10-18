@@ -142,9 +142,7 @@ Ordem sugerida de evolução do projeto. Cada fase é independente e entregável
    - Melhor pra preencher nuvem persistente, pior pra análise fina
    - Novo módulo `extract_modis.py` + fallback em `analyze.py` quando buffer Landsat insuficiente
 
-7.2 **Arborização IBGE:** usar `--arborizacao` já previsto no analyze
-   - Dataset: tabela IBGE por setor com % de arborização em logradouros
-   - Melhora o termo `falta_verde` do índice
+✅ 7.2 **Arborização IBGE** (feito em 2026-10-18). Dataset: Pesquisa Urbanística do Entorno dos Domicílios do Censo 2022 (IBGE), variável `v05200_v05230_perc`. Script de preparação baixa `br_setores_entorno_cd2022(in).csv` do FTP IBGE, filtra por `cd_setor` começando em `1200401` e grava `data/arborizacao_rb.csv` com colunas `nome,pct_arborizacao = 100 - % moradores em face sem árvore`. Cobre 582 de 669 setores (87%); 87 setores rurais sem domicílios ocupados ficam sem valor. `analyze.py` passa a usar o CSV via `--arborizacao` (infra já existia desde a Fase 0): o termo `falta_verde` do índice vira a **média** entre `(1 - minmax(NDVI))` e `(1 - minmax(pct_arborizacao))`. Impacto no top-5 conservador: Vila da Amizade segue #1 mas Habitar Brasil 424 entra (bairro de expansão com baixa arborização nas vias), 2 dos 3 João Eduardo saem, Aeroporto Velho ganha. Notas caem ~5 pontos porque o termo compósito suaviza extremos de um só termo. Snapshot em `snapshots/2026-10-18-arborizacao-ibge/`; viewer ganhou nova linha "Arborização na calçada" no popup e nova entrada no glossário.
 
 7.3 **Focos INPE (BDQueimadas):**
    - Classificar perdas: "verde que virou nada por queimada" vs. "verde que caiu por outra razão (seca, corte)"
