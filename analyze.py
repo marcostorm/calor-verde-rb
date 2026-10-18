@@ -151,6 +151,22 @@ def read_raster(path):
     return arr, transform, abs(res[0] * res[1])
 
 
+def read_loss_raster(path):
+    """Lê o raster de perda sem respeitar `src.nodata` do arquivo.
+
+    O TIF gerado por `extract_gee.py` ficou com `nodata=0` nos metadados,
+    mas 0 é um valor LEGÍTIMO: "pixel avaliado que não perdeu vegetação".
+    O valor sentinela real é 255 (unmask do GEE). Confiar no `src.nodata`
+    aqui descartaria todos os 0s e deixaria perda_pct = 100% em qualquer
+    setor com ao menos um pixel de perda.
+    """
+    with rasterio.open(path) as src:
+        arr = src.read(1).astype("float32")
+        transform, res = src.transform, src.res
+    arr[arr == 255] = np.nan
+    return arr, transform, abs(res[0] * res[1])
+
+
 def load_units(path, dissolve, crs):
     gdf = gpd.read_file(path).to_crs(crs)
     if dissolve:
@@ -508,7 +524,7 @@ def _run_pipeline(args, writer, recorder=None):
 
         with rasterio.open(loss_tif) as src:
             crs = src.crs
-        _, _, px_area = read_raster(loss_tif)
+        loss_arr, loss_tr, px_area = read_loss_raster(loss_tif)
         lst_arr, _, lst_px = read_raster(lst_tif)
         lst_all = lst_arr[~np.isnan(lst_arr)]
         lst_p75 = float(np.percentile(lst_all, 75))
@@ -529,7 +545,7 @@ def _run_pipeline(args, writer, recorder=None):
             zonal(gdf, lst_tif, ["mean", "percentile_90", "count"], "lst_"),
             zonal(gdf, ndvi_now_tif, ["mean"], "ndvi_atual_"),
             zonal(gdf, ndvi_base_tif, ["mean"], "ndvi_base_"),
-            zonal(gdf, loss_tif, ["sum", "count"], "perda_"),
+            zonal(gdf, (loss_arr, loss_tr), ["sum", "count"], "perda_"),
         ]
         gdf = gpd.GeoDataFrame(pd.concat([gdf] + parts, axis=1), geometry="geometry", crs=crs)
 
@@ -550,7 +566,7 @@ def _run_pipeline(args, writer, recorder=None):
     if not args.sem_interpolar:
         with recorder.stage("interpolate"):
             rasters = {"lst": lst_tif, "ndvi_now": ndvi_now_tif,
-                       "ndvi_base": ndvi_base_tif, "loss": loss_tif}
+                       "ndvi_base": ndvi_base_tif, "loss": (loss_arr, loss_tr)}
             if args.interpolacao_ingenua or "SITUACAO" not in gdf.columns:
                 gdf = interpolate_by_buffer(gdf, ok, rasters,
                                             buffer_m=args.buffer_interp,
