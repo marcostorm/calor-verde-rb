@@ -8,9 +8,13 @@ Para citação formal em relatórios, pareceres técnicos, peças jurídicas, no
 
 ## Licenciamento
 
-- **Código**: [AGPL-3.0](LICENSE)
-- **Dados derivados e relatórios**: CC BY 4.0 (atribuir ao autor + link do repositório)
-- **Licença comercial sem copyleft**: sob acordo (ver `README.md` seção "Licenciamento")
+Projeto sob **[licença proprietária](LICENSE)** com direitos reservados.
+
+- Uso **não comercial** (estudo, pesquisa, educação, jornalismo) permitido com atribuição.
+- Uso **comercial** (venda, consultoria, SaaS, implantação em cliente, concorrência pública) exige **licença escrita e paga** do autor.
+- Dados-fonte seguem licenças originais dos provedores.
+
+Para licença comercial, abra uma issue no repositório. Ver detalhes em `LICENSE` e `README.md`.
 
 ## ABNT (NBR 6023)
 

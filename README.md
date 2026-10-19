@@ -63,11 +63,20 @@ python analyze.py --unidades data/bairros_fake.geojson --dissolver NM_BAIRRO --s
 
 ## Licenciamento
 
-- **Código** (`*.py`, `*.yml`, `*.html`): [AGPL-3.0](LICENSE). Qualquer uso em serviço de rede (SaaS, dashboard online, API pública) exige que o código derivado também seja aberto sob a mesma licença.
-- **Dados derivados** em `data/out/` e `snapshots/`: CC BY 4.0 — reuso livre com atribuição ao autor + link para este repositório.
-- **Relatórios PDF** em `relatorios/`: CC BY 4.0.
-- **Dados-fonte** (Landsat, Sentinel-2, IBGE, INPE, OpenStreetMap): licenças originais dos respectivos provedores; ver `CITATION.md`.
+Este projeto é publicado sob **[licença proprietária](LICENSE)** com direitos reservados. Resumo:
 
-**Licença comercial sob medida** (sem a obrigação de copyleft da AGPL — ex.: prefeitura ou empresa que queira adaptar o pipeline internamente sem publicar o código derivado): entrar em contato pelo e-mail do autor ou via issue no repositório. O modelo é dual-licensing: AGPL aberto por default, licença proprietária paga sob acordo.
+**Permitido sem autorização** (com atribuição):
+- Estudo pessoal, pesquisa acadêmica, uso educacional, jornalismo
+- Rodar o pipeline localmente para esses fins
+- Citar trechos (até 15%) em trabalhos acadêmicos, reportagens e artigos
+
+**Proibido sem licença escrita e paga do autor:**
+- Qualquer uso comercial (venda, consultoria, prestação de serviço, SaaS, implantação em cliente, concorrência pública)
+- Redistribuição sob outra licença
+- Obra derivada publicada ou distribuída
+
+**Dados-fonte** (Landsat, Sentinel-2, IBGE, INPE, OSM) seguem as licenças originais de seus provedores; ver `CITATION.md`.
+
+**Para licença comercial**: abra uma issue no repositório ou entre em contato pelo canal público listado no perfil do autor. Termos (valor, escopo, duração) são negociados caso a caso.
 
 Autor: **Marcos Henrique Melo de Araújo** · Rio Branco, Acre · Alias de código: `marcostorm`.
