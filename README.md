@@ -1,4 +1,4 @@
-# Calor & Verde — Rio Branco (MVP, pipeline de dados)
+# Calor & Verde Rio Branco (MVP, pipeline de dados)
 
 Cruza temperatura de superfície, perda de vegetação e arborização do IBGE por bairro/setor
 censitário e gera um ranking de **prioridade de plantio**.

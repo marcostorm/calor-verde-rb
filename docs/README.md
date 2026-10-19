@@ -1,4 +1,4 @@
-# Calor & Verde — Rio Branco
+# Calor & Verde Rio Branco
 
 Documentação do pipeline de dados que cruza **temperatura de superfície (LST)**, **vegetação (NDVI)** e **perda de verde** por setor censitário de Rio Branco (AC) e produz um ranking de **prioridade de plantio**.
 

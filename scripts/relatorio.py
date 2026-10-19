@@ -146,7 +146,7 @@ p { margin: 0 0 6pt; }
 .capa .meta { font-size: 10pt; color: #5a6b63; margin-top: auto; padding-top: 20pt; border-top: 1px solid #c4cfb0; }
 .capa .meta b { color: #1a2621; font-weight: 600; }
 .sumario ul { padding-left: 0; list-style: none; margin: 0; }
-.sumario li { padding: 5pt 0; border-bottom: 1px solid #c4cfb0; display: flex; gap: 14pt; align-items: baseline; }
+.sumario li { padding: 6pt 0 10pt; border-bottom: 1px solid #c4cfb0; display: flex; gap: 14pt; align-items: baseline; }
 .sumario li .valor { font-family: 'Lora', serif; font-weight: 700; font-size: 17pt; color: #2d5a3d; min-width: 90pt; font-variant-numeric: tabular-nums; }
 .sumario li .texto { flex: 1; font-size: 9.5pt; color: #1a2621; line-height: 1.4; }
 .mapa { margin: 6pt 0 10pt; }
@@ -318,7 +318,7 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
 <body>
 
 <section class="capa">
-  <div class="selo">{LEAF_SVG}Calor &amp; Verde — Rio Branco</div>
+  <div class="selo">{LEAF_SVG}Calor &amp; Verde Rio Branco</div>
   <h1>Panorama {C.YEAR_NOW}</h1>
   <div class="sub">Onde a cidade mais precisa de árvore. Diagnóstico por satélite da estação seca.</div>
   <div class="manchete">
@@ -397,7 +397,7 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
   <div class="secao-num">06 · Reproduzir e citar</div>
   <h2>Como usar este relatório</h2>
   <p><b>Mapa interativo e lista completa</b>: <a href="https://marcostorm.github.io/calor-verde-rb/">marcostorm.github.io/calor-verde-rb</a> · <b>metodologia completa</b>: <a href="https://marcostorm.github.io/calor-verde-rb/metodo.html">/metodo.html</a> · <b>reprodução</b>: <code>git clone github.com/marcostorm/calor-verde-rb</code> (requer Python 3.12 + GEE) · <b>dados brutos</b>: <code>snapshots/{C.YEAR_NOW}/</code> no repositório.</p>
-  <p><b>Como citar</b> (ABNT): ARAÚJO, M. H. M. <i>Calor &amp; Verde — Rio Branco</i>: diagnóstico por satélite da prioridade de plantio na estação seca de {C.YEAR_NOW}. Rio Branco: Storm Lab, {C.YEAR_NOW}. Disponível em: &lt;https://marcostorm.github.io/calor-verde-rb/&gt;. Acesso em: {hoje.strftime('%d/%m/%Y')}.</p>
+  <p><b>Como citar</b> (ABNT): ARAÚJO, M. H. M. <i>Calor &amp; Verde Rio Branco</i>: diagnóstico por satélite da prioridade de plantio na estação seca de {C.YEAR_NOW}. Rio Branco: Storm Lab, {C.YEAR_NOW}. Disponível em: &lt;https://marcostorm.github.io/calor-verde-rb/&gt;. Acesso em: {hoje.strftime('%d/%m/%Y')}.</p>
   <div class="ref">
     Licença dos dados derivados: CC BY 4.0 · Código: ver repositório · Projeto independente, não institucional · Dúvidas e correções: via issues no GitHub.
   </div>
