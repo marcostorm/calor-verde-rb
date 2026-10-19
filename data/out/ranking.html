@@ -29,6 +29,9 @@
   }
   html,body{margin:0;font-family:var(--sans);color:var(--text);background:var(--bg-page);font-size:14px;line-height:1.5}
   body{position:relative}
+  .site-footer{margin-top:48px;padding:18px 0 8px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--text-muted);line-height:1.6;text-align:center}
+  .site-footer b{color:var(--text);font-weight:600}
+  .site-footer a{color:var(--accent)}
   body::before{content:'';position:fixed;inset:0;background:url('img/leaf.svg') repeat;background-size:32px;mix-blend-mode:multiply;opacity:.03;pointer-events:none;z-index:0}
   body > *{position:relative;z-index:1}
   h1 .brand-leaf{width:30px;height:30px;vertical-align:-7px;margin-right:10px}
@@ -127,6 +130,12 @@
     <thead><tr id="th-row"></tr></thead>
     <tbody id="tb"></tbody>
   </table>
+
+  <footer class="site-footer">
+    © 2026 <b>Marcos Henrique Melo de Araújo</b>. Todos os direitos reservados.<br>
+    Licença proprietária. Uso não comercial permitido com atribuição; uso comercial exige
+    <a href="https://github.com/marcostorm/calor-verde-rb/blob/main/LICENSE" target="_blank" rel="noopener">licença escrita</a> do autor.
+  </footer>
 </div>
 
 <script>
