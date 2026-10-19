@@ -399,7 +399,7 @@ def montar_html(resumo, ranking, trends_df, mapa_pri_png, mapa_delta_png, hoje):
   <p><b>Mapa interativo e lista completa</b>: <a href="https://marcostorm.github.io/calor-verde-rb/">marcostorm.github.io/calor-verde-rb</a> · <b>metodologia completa</b>: <a href="https://marcostorm.github.io/calor-verde-rb/metodo.html">/metodo.html</a> · <b>reprodução</b>: <code>git clone github.com/marcostorm/calor-verde-rb</code> (requer Python 3.12 + GEE) · <b>dados brutos</b>: <code>snapshots/{C.YEAR_NOW}/</code> no repositório.</p>
   <p><b>Como citar</b> (ABNT): ARAÚJO, M. H. M. <i>Calor &amp; Verde Rio Branco</i>: diagnóstico por satélite da prioridade de plantio na estação seca de {C.YEAR_NOW}. Rio Branco: Storm Lab, {C.YEAR_NOW}. Disponível em: &lt;https://marcostorm.github.io/calor-verde-rb/&gt;. Acesso em: {hoje.strftime('%d/%m/%Y')}.</p>
   <div class="ref">
-    Licença dos dados derivados: CC BY 4.0 · Código: ver repositório · Projeto independente, não institucional · Dúvidas e correções: via issues no GitHub.
+    Licença proprietária. Uso não comercial (estudo, pesquisa, educação, jornalismo) permitido com atribuição; uso comercial exige licença escrita e paga do autor. Detalhes em <a href="https://github.com/marcostorm/calor-verde-rb/blob/main/LICENSE">LICENSE</a> no repositório. Projeto independente, não institucional. Dúvidas e correções: via issues no GitHub.
   </div>
 </section>
 
