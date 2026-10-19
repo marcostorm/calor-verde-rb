@@ -133,7 +133,7 @@ CSS = """
 @page :first { @bottom-right { content: ""; } }
 body { font-family: 'Nunito Sans', 'Helvetica', sans-serif; color: #1a2621; line-height: 1.55; font-size: 10pt; widows: 1; orphans: 1; }
 h1 { font-family: 'Lora', 'Georgia', serif; font-weight: 700; font-size: 28pt; line-height: 1.15; letter-spacing: -0.01em; margin: 0 0 8pt; }
-h2 { font-family: 'Lora', serif; font-weight: 600; font-size: 16pt; margin: 24pt 0 8pt; color: #1a2621; page-break-after: avoid; }
+h2 { font-family: 'Lora', serif; font-weight: 600; font-size: 16pt; margin: 16pt 0 6pt; color: #1a2621; page-break-after: avoid; }
 h3 { font-family: 'Lora', serif; font-weight: 600; font-size: 12pt; margin: 14pt 0 4pt; page-break-after: avoid; }
 p { margin: 0 0 6pt; }
 .capa { page-break-after: always; display: flex; flex-direction: column; justify-content: center; min-height: 220mm; }
@@ -146,7 +146,7 @@ p { margin: 0 0 6pt; }
 .capa .meta { font-size: 10pt; color: #5a6b63; margin-top: auto; padding-top: 20pt; border-top: 1px solid #c4cfb0; }
 .capa .meta b { color: #1a2621; font-weight: 600; }
 .sumario ul { padding-left: 0; list-style: none; margin: 0; }
-.sumario li { padding: 6pt 0 10pt; border-bottom: 1px solid #c4cfb0; display: flex; gap: 14pt; align-items: baseline; }
+.sumario li { padding: 4pt 0 7pt; border-bottom: 1px solid #c4cfb0; display: flex; gap: 14pt; align-items: baseline; }
 .sumario li .valor { font-family: 'Lora', serif; font-weight: 700; font-size: 17pt; color: #2d5a3d; min-width: 90pt; font-variant-numeric: tabular-nums; }
 .sumario li .texto { flex: 1; font-size: 9.5pt; color: #1a2621; line-height: 1.4; }
 .mapa { margin: 6pt 0 10pt; }
