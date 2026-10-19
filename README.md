@@ -60,3 +60,14 @@ python analyze.py --unidades data/bairros_fake.geojson --dissolver NM_BAIRRO --s
 - 10 m não capta toda árvore isolada de calçada; o dado do IBGE complementa isso.
 - NDVI cai também por seca/queimada, não só por corte. Valide pontos de perda com imagem de alta resolução.
 - POIs dependem da completude do OpenStreetMap em Rio Branco.
+
+## Licenciamento
+
+- **Código** (`*.py`, `*.yml`, `*.html`): [AGPL-3.0](LICENSE). Qualquer uso em serviço de rede (SaaS, dashboard online, API pública) exige que o código derivado também seja aberto sob a mesma licença.
+- **Dados derivados** em `data/out/` e `snapshots/`: CC BY 4.0 — reuso livre com atribuição ao autor + link para este repositório.
+- **Relatórios PDF** em `relatorios/`: CC BY 4.0.
+- **Dados-fonte** (Landsat, Sentinel-2, IBGE, INPE, OpenStreetMap): licenças originais dos respectivos provedores; ver `CITATION.md`.
+
+**Licença comercial sob medida** (sem a obrigação de copyleft da AGPL — ex.: prefeitura ou empresa que queira adaptar o pipeline internamente sem publicar o código derivado): entrar em contato pelo e-mail do autor ou via issue no repositório. O modelo é dual-licensing: AGPL aberto por default, licença proprietária paga sob acordo.
+
+Autor: **Marcos Henrique Melo de Araújo** · Rio Branco, Acre · Alias de código: `marcostorm`.

@@ -6,6 +6,12 @@ Para citação formal em relatórios, pareceres técnicos, peças jurídicas, no
 
 **Marcos Henrique Melo de Araújo** (publicado no GitHub sob o alias "marcostorm" / Marcos Storm). Rio Branco, Acre, Brasil.
 
+## Licenciamento
+
+- **Código**: [AGPL-3.0](LICENSE)
+- **Dados derivados e relatórios**: CC BY 4.0 (atribuir ao autor + link do repositório)
+- **Licença comercial sem copyleft**: sob acordo (ver `README.md` seção "Licenciamento")
+
 ## ABNT (NBR 6023)
 
 > ARAÚJO, Marcos Henrique Melo de. **Calor & Verde Rio Branco**: ranking de prioridade de plantio por setor censitário. Versão de 2026-10-16. Rio Branco: 2026. Disponível em: <https://marcostorm.github.io/calor-verde-rb/>. Acesso em: [data de acesso].
